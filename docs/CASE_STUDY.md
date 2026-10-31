@@ -1,5 +1,7 @@
 # Retail data preflight — working submission draft
 
+This draft describes the earlier single-file workflow. The SQL reconciliation workflow is under development; see IMPLEMENTATION_PLAN.md for current milestone status. Rewrite this draft around the final workflow in Step 6.
+
 Applicant review required before submission, particularly the exact wording of experience, current workflow, and final total time. Intended as a concise four-page-or-less explanation; currently Markdown, not a verified paginated artifact.
 
 ## 1. Problems and selection

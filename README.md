@@ -4,7 +4,13 @@ A working, local CSV preflight tool driven by source-specific JSON data contract
 
 ## SQL reconciliation work in progress
 
-The next workflow compares two explicit SQL pipelines over shared source snapshots. See `docs/IMPLEMENTATION_PLAN.md` for six implementation milestones. Step 1 is complete: synthetic data, SQL steps, a proposed job format, and a manually specified answer key are in `samples/reconciliation/filter_mismatch/`. The generic executor, reconciliation engine, and runtime AI are not implemented yet. Commands below continue to run the existing single-file checker.
+The next workflow compares two explicit SQL pipelines over shared source snapshots. Steps 1 and 2 are complete: synthetic inputs and a manual answer key are available, and a staged executor retains source and intermediate tables in SQLite. Run:
+
+```sh
+python3 -m src.sql_runner samples/reconciliation/filter_mismatch/job.json
+```
+
+See [docs/SQL_EXECUTOR.md](docs/SQL_EXECUTOR.md) for execution artifacts and failure diagnostics, and [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for the remaining milestones. Reconciliation and runtime AI are not implemented yet. The commands below run the existing single-file checker.
 
 ## Setup and run
 
@@ -97,7 +103,7 @@ Extra columns are allowed and ignored. UTF-8 (including BOM) is supported. Missi
 
 ## Implementation and limits
 
-Implemented: CLI, validated JSON contracts, source-specific field names and composite keys, deterministic checks, human-readable findings, JSON export, exit codes, synthetic samples, a human-resolution demonstration, and automated checks. No mocked external API is involved; sample data alone is synthetic. Deferred: graphical UI, warehouse integration, catalog lookups, cross-batch duplicate detection, automatic repair, and large-file benchmarks. Adding new rule types still requires Python changes; configuration supports the documented checks, not arbitrary business expressions. Duplicate detection uses memory proportional to distinct IDs; findings are also retained in memory. Intended for small demonstration batches.
+Implemented: single-file CLI, staged SQL executor with retained SQLite tables and execution logs, validated JSON contracts, source-specific field names and composite keys, deterministic checks, human-readable findings, JSON export, exit codes, synthetic samples, a human-resolution demonstration, and automated checks. No mocked external API is involved; sample data alone is synthetic. Deferred: graphical UI, warehouse integration, catalog lookups, cross-batch duplicate detection, automatic repair, and large-file benchmarks. Adding new rule types still requires Python changes; configuration supports the documented checks, not arbitrary business expressions. Duplicate detection uses memory proportional to distinct IDs; findings are also retained in memory. Intended for small demonstration batches.
 
 See `docs/CASE_STUDY.md` for the working submission draft and decisions. It still needs applicant review of the experience wording, current-workflow details, and final time declaration.
 
@@ -105,7 +111,7 @@ See `docs/AI_EXTENSION.md` for proposed AI features; no model or AI-generated bu
 
 ## Time and AI disclosure
 
-Codex assisted with ideation, code, synthetic samples, tests, and documentation. Checks include hand-specified expected findings and fourteen automated tests; these were also AI-assisted and are not independent evidence of real-world usefulness. No prior project code was reused.
+Codex assisted with ideation, code, synthetic samples, tests, and documentation. Checks include hand-specified expected findings and 26 automated tests; these were also AI-assisted and are not independent evidence of real-world usefulness. No prior project code was reused.
 
 ```sh
 python3 scripts/work_timer.py start "Describe work"

@@ -1,7 +1,13 @@
 # First Pipeline Example: Filter Mismatch
 
 All records and SQL are synthetic. No employer data or actual incident details are included.
-This milestone delivers executor inputs and expectations; the reusable execution command will be provided in Step 2 of the implementation plan.
+The reusable Step 2 executor is available. From the repository root, run:
+
+```sh
+python3 -m src.sql_runner samples/reconciliation/filter_mismatch/job.json
+```
+
+It retains both sources and all four stages in run.sqlite, with execution metadata in execution.json. See [the executor guide](../../../docs/SQL_EXECUTOR.md) for inspection commands and failure behavior. Computed reconciliation and AI analysis remain later milestones.
 
 For the complete data dictionary, step-by-step arithmetic, and Step 1 acceptance checklist, see [MANUAL_WALKTHROUGH.md](MANUAL_WALKTHROUGH.md).
 
