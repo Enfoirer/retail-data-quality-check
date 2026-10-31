@@ -98,6 +98,17 @@ class JoinReportTests(unittest.TestCase):
         self.assertEqual([case['before']['difference_cents'] for case in summary['cases']], [147900, 10000])
         self.assertEqual([case['after']['difference_cents'] for case in summary['cases']], [0, 0])
         self.assertTrue(all(case['source_files_unchanged'] for case in summary['cases']))
+        self.assertTrue(summary['query_scope_example']['verified'])
+        self.assertEqual(summary['query_scope_example']['status'], 'MATCH')
+        self.assertEqual(summary['query_scope_example']['first_raw_divergence'], 'filtered')
+        invalid = summary['invalid_input_example']
+        self.assertTrue(invalid['verified'])
+        self.assertEqual((invalid['status'], invalid['error']['pipeline'], invalid['error']['step']),
+                         ('ERROR', 'B', 'filter'))
+        with closing(sqlite3.connect(self.base / 'demo/invalid-sql/run.sqlite')) as db:
+            tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+            self.assertIn('a_enriched', tables)
+            self.assertNotIn('b_filtered', tables)
 
 
 class JoinModelTests(unittest.TestCase):

@@ -1,143 +1,94 @@
-# Retail SQL Reconciliation and Diagnostics
+# Retail SQL Reconciliation and Evidence-Based Investigation
 
-A local prototype that executes two explicit SQL pipelines over shared retail snapshots, compares a common user query, and traces record, grain, and join discrepancies. The earlier configurable single-file checker remains available for input preflight. All samples are synthetic. No JD data, code, credentials, or integrations are used.
+A runnable case-study prototype: execute two explicit SQL pipelines over shared retail snapshots, compare a common user query, trace discrepancies to retained stages and records, and optionally ask a model for a cited interpretation. All input data and supplied corrections are synthetic. No employer data, code, credentials, or warehouse connection is included.
 
-## SQL reconciliation work in progress
+## Start here
 
-The SQL workflow now executes two pipelines over shared source snapshots and reconciles a common filtered/grouped user request. Steps 1–5 are complete; submission preparation remains Step 6. Run:
+- Written explanation: [four-page PDF](output/pdf/CASE_STUDY.pdf), with editable [Markdown source](docs/CASE_STUDY.md).
+- Interview walkthrough: [15-minute demonstration](docs/DEMO.md).
+- Source package: `python3 scripts/package_submission.py` builds a ZIP from [an explicit file list](submission_manifest.json).
 
-```sh
-python3 -m src.reconcile samples/reconciliation/filter_mismatch/job.json
-python3 -m src.reconcile samples/reconciliation/filter_mismatch/job-paid-query.json
-```
-
-The first command intentionally exits 1: B retains an additional cancelled item worth CNY 1,479. The second exits 0: a paid-only user query excludes that item, so scoped details and query results agree while raw dataset differences remain visible. Each run creates a new output directory with retained SQLite tables, execution metadata, reconciliation.json, and difference CSV files.
-
-See [docs/RECONCILIATION.md](docs/RECONCILIATION.md) for query semantics and [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for remaining milestones. The execution-only command remains `python3 -m src.sql_runner samples/reconciliation/filter_mismatch/job.json`; its SUCCESS status does not mean reconciliation passed. Declared join diagnostics, readable evidence reports, and optional model analysis are available. The setup section below also includes the earlier single-file checker.
-
-Run both correction demonstrations with source-hash verification:
+Python **3.10+**. Developed and verified on Python 3.13.7. The deterministic prototype and tests use only the standard library: no installation, API key, paid service, or production account is required. From the repository root:
 
 ```sh
 python3 demo_reconciliation.py
+python3 -W error::ResourceWarning -m unittest discover -s tests -q
 ```
 
-The filter difference changes from CNY 1,479 to zero. The history-join difference changes from CNY 100 to zero, while all historical source rows remain retained. See [docs/JOIN_DIAGNOSTICS.md](docs/JOIN_DIAGNOSTICS.md). Each reconciliation run now produces report.md and evidence.json in addition to the existing artifacts.
+The demo exits **0** when its expected outcomes are verified. It executes both before/after corrections, the paid-only query, and a deliberately invalid SQL example. It creates a fresh directory under outputs/ and prints report paths plus a demo-summary.json. Existing run directories are protected against overwrite.
 
-## Optional AI interpretation
+Expected summary:
 
-Install `python3 -m pip install -r requirements-ai.txt` and set OPENAI_API_KEY in your environment, then run:
+```text
+filter_mismatch: DIFFERENT -> MATCH; difference 147900 -> 0 cents; source files unchanged=True
+join_fanout: AMBIGUOUS -> MATCH; difference 10000 -> 0 cents; source files unchanged=True
+paid_query: MATCH; raw divergence=filtered; query-scope divergence=none
+invalid_sql: ERROR; failed pipeline=B; step=filter (expected controlled failure)
+```
+
+## Individual inputs and expected outcomes
+
+| Job under samples/reconciliation/ | Expected finding | Exit |
+|---|---|---:|
+| filter_mismatch/job.json | I003 exists only in B; Beijing differs by CNY 1,479; first divergence is filtered | 1 |
+| filter_mismatch/job-fixed-filter.json | Supplied paid-only filter correction restores MATCH | 0 |
+| join_fanout/job.json | Two product versions duplicate I001; CNY 100 difference; grain is AMBIGUOUS | 2 |
+| join_fanout/job-fixed.json | Join the prepared current-products table; MATCH, all source history retained | 0 |
+| filter_mismatch/job-paid-query.json | Paid-only query MATCH; raw dataset difference remains visible | 0 |
+| filter_mismatch/job-invalid-sql.json | Controlled ERROR at B/filter; completed A tables retained | 2 |
+
+Run an individual job with:
 
 ```sh
+python3 -m src.reconcile samples/reconciliation/filter_mismatch/job.json
+```
+
+Nonzero exits above are expected findings, not failed setup. MATCH means configured scoped groups and detail fields agree, not universal business correctness. AMBIGUOUS preserves duplicate/missing keys. ERROR identifies an execution or comparison failure. Execution-only `python3 -m src.sql_runner JOB` is also available; its SUCCESS does not mean reconciliation passed.
+
+## What runs and what is retained
+
+JSON job + shared CSV snapshots + staged SQL -> retained SQLite tables -> query/detail/checkpoint comparisons -> declared-join diagnostics -> evidence reports -> optional AI interpretation.
+
+The job declares keys, integer-cent amount semantics, dimensions, aligned checkpoints, common filters/grouping, and optional join expectations. Source preflight reuses the configurable checker from this same exercise. Original amount text is retained; exact parsing produces integer cents, and comparison aggregation uses Python integers. Differences mean **B minus A**. SQL fixtures use original CNY order amounts; a cancelled snapshot may retain a positive amount.
+
+| Per-run artifact | Purpose |
+|---|---|
+| report.md / evidence.json | English evidence report and IDs linked to exact saved JSON values |
+| run.sqlite / execution.json | Shared sources, successful intermediate tables, actual SQL, read dependencies, and failures |
+| reconciliation.json / differences/*.csv | Raw/scoped comparisons, grouped metrics, key/value differences, and preserved grain issues |
+| ai/analysis.md and JSON files, when requested | Separate interpretation, request/response, and local validation status |
+
+SQL and configuration must be explicitly provided. The program does not infer arbitrary SQL lineage, choose duplicate winners, or execute proposed repairs. Corrected SQL files are manually supplied synthetic acceptance variants. expected.json files are manual answer keys; the runtime does not load them.
+
+## Optional real-model analysis
+
+Install the optional dependency and set OPENAI_API_KEY in your environment, then run:
+
+```sh
+python3 -m pip install -r requirements-ai.txt
 python3 -m src.reconcile samples/reconciliation/join_fanout/job.json --ai
 ```
 
-The model receives saved evidence, executed SQL, and supplied business requirements. It produces separate observations, hypotheses, and verification suggestions in ai/analysis.md. Local checks reject invented evidence IDs, incorrect anchor values, and changed deterministic statuses. Correct citations do not prove that the prose is justified; human review remains required. Missing credentials or model failure leave the deterministic report available. See [docs/AI_ANALYSIS.md](docs/AI_ANALYSIS.md) for setup, artifacts, limits, and standalone/retry commands, and [docs/AI_EVALUATION.md](docs/AI_EVALUATION.md) for actual model evaluation.
+Default: gpt-5-mini. Override with OPENAI_MODEL or --ai-model. The model receives supplied requirements, actual SQL, and checked evidence. Output separates observations, hypotheses, and verification suggestions. Local checks reject unknown evidence IDs, false anchor values, hidden paths, and changed deterministic statuses. Correct citations do not guarantee justified prose: human review remains necessary.
 
-## Setup and run
+Missing credentials/SDK, provider errors, refusals, or invalid output leave the deterministic report available. AI status is printed separately and does not change the computed reconciliation exit code. See [AI setup and failures](docs/AI_ANALYSIS.md) for standalone/retry commands. [Actual captured calls](samples/ai_analysis/README.md) can be inspected without an account; they are recorded examples, never runtime fallback answers. [Evaluation notes](docs/AI_EVALUATION.md) include rejected attempts and remaining semantic weaknesses.
 
-Python 3.10+; the deterministic workflow uses only the standard library. Developed and tested on Python 3.13.7. These commands need no install, API key, paid service, or production account. Optional model analysis requires the separate setup above. Run from the repository root:
+## Verification and submission package
 
-```sh
-python3 demo.py
-python3 src/retail_check.py samples/source-b.csv --config configs/source-b-snapshots.json --output outputs/source-b.json
-python3 src/retail_check.py samples/clean.csv --output outputs/clean.json
-python3 src/retail_check.py samples/typical-errors.csv --output outputs/errors.json
-python3 src/retail_check.py samples/difficult-case.csv --output outputs/difficult.json
-python3 src/retail_check.py samples/invalid-schema.csv
-python3 -m unittest discover -s tests -v
-```
-
-The last three sample commands intentionally return nonzero exit codes. Exit codes: **0** PASS, **1** BLOCK or REVIEW, **2** invalid input/output or unreadable file. Existing report files are replaced; the input CSV cannot be the report destination. Reports contain source values in messages such as invalid status; handle reports according to your data policy.
-
-## Configure a data source
-
-`--config` selects a JSON contract. The default is `configs/retail-order-lines.json`; existing commands still work. `configs/source-b-snapshots.json` demonstrates different column names, a composite `(order_ref, line_no)` key, day/month dates, USD, and positive original amounts retained on refunded snapshots. With its matching config, `samples/source-b.csv` passes without editing Python.
-
-A minimal contract is:
-
-```json
-{
-  "name": "example-v1",
-  "required": ["order_id", "line_no", "amount"],
-  "unique_key": ["order_id", "line_no"]
-}
-```
-
-Required fields and uniqueness are checked even in a minimal contract. Additional optional rule groups:
-
-| JSON key | Purpose |
-|---|---|
-| `amount` | `field` and `decimal_places` (integer 0–6); strict decimal parsing |
-| `date` | `field`, `format`, optional `review_alternate_formats` boolean |
-| `allowed_values` | Mapping from column names to nonempty lists of accepted strings |
-| `status_amount` | `status_field` and a `rules` mapping from every allowed status to a sign rule |
-
-All rule fields must appear in `required`. Supported date formats: `%Y-%m-%d`, `%d/%m/%Y`, `%m/%d/%Y`; alternate-format review can be enabled for the ISO default. The CLI date-format override takes precedence and is recorded separately. Status/amount checks require an amount rule and exact coverage of the status enumeration. Sign rules are `positive`, `negative`, `zero`, `nonnegative`, `nonpositive`, and `any` (explicitly no sign restriction).
-
-Contracts are checked before CSV processing. Unknown options, malformed JSON, duplicate JSON keys, unsupported rule values, unknown referenced fields, and incomplete status mappings return CONFIG ERROR (exit 2). No expressions or Python code are evaluated. Valid syntax does not establish correct business meaning: a person must confirm the contract. JSON reports use `schema_version: 2` and embed the loaded contract plus any date-format override for inspection.
-
-## End-to-end investigation example
-
-`python3 demo.py` runs real checks on a before batch and a manually prepared resolved batch, then writes JSON reports to `outputs/demo/`:
-
-- Before: 6 records, BLOCK, 3 errors (duplicate item, missing product ID, conflicting item amount).
-- Manual source-confirmation steps: see `samples/RESOLUTION_NOTES.md`. These confirmations are synthetic and supplied as a demonstration answer key. The program does not choose which conflicting value is true.
-- After: 4 records, PASS, no findings.
-- Illustrative raw row-amount sums: CNY 360.50 before, CNY 220.50 after. The CNY 140.00 difference comes from a repeated 100.00 snapshot and a superseded 40.00 snapshot in this fixture. This is not a measured saving or a general impact estimate.
-
-The example uses all-paid CNY records under a one-current-snapshot-per-item contract. Original files remain unchanged. You can edit a copy of the before file yourself, following the supplied confirmations, and rerun the validator to demonstrate the human step live.
-
-## Expected sample outcomes
-
-| Sample | Records | Decision | Errors | Reviews | Findings |
-|---|---:|---|---:|---:|---|
-| clean.csv | 4 | PASS | 0 | 0 | Multiple items under one order and signed refund are valid |
-| typical-errors.csv | 4 | BLOCK | 5 | 0 | Duplicate ID, missing product, invalid amount, invalid date, status/amount mismatch |
-| difficult-case.csv | 3 | BLOCK | 2 | 1 | Conflicting ID, formatted amount rejected, undeclared slash date |
-| invalid-schema.csv | — | INPUT ERROR | — | — | Missing required columns; exit 2 |
-
-Each finding includes the logical CSV record number (header is record 1), field, rule code, severity, explanation, and next action. This is not a physical line number when quoted fields contain newlines. Error/review totals count findings, not affected records. BLOCK means at least one rule error; REVIEW means only unresolved format questions; PASS means no implemented rule fired, not a guarantee of business correctness.
-
-## Default contract and explicit assumptions
-
-Required, nonempty columns:
-
-- `order_item_id`: unique per batch at order-line grain; matching duplicates and conflicting duplicates are both blocked. Comparison uses trimmed values in required columns.
-- `order_id`: may repeat across items.
-- `product_id`: required; existence in a real catalog is not checked.
-- `order_date`: strict `YYYY-MM-DD` by default. For a documented source convention, pass `--date-format '%d/%m/%Y'` or `--date-format '%m/%d/%Y'`. One convention applies to the entire file; mixed formats must be resolved upstream.
-- `amount`: decimal without currency symbols or grouping separators, at most two fractional digits; parsed with Decimal.
-- `currency`: CNY in the default contract; other sources can declare a different enumeration.
-- `status`: `paid`, `cancelled`, or `refunded`.
-
-**Synthetic business convention:** each row represents a current net-movement amount: paid > 0, cancelled = 0, refunded < 0. Real systems may retain original positive amounts on cancelled/refunded orders, or store refunds separately. Confirm semantics before adapting these rules. Partial refunds and repeated lifecycle events are outside this schema.
-
-Extra columns are allowed and ignored. UTF-8 (including BOM) is supported. Missing/duplicate headers, malformed records, empty/header-only files, bad encoding, and missing paths fail with an explicit input error. No automatic corrections, deletions, network calls, or ingestion actions occur.
-
-## Demonstration (about five minutes)
-
-1. Run `python3 demo.py`; inspect `outputs/demo/before-report.json` and locate the three source problems.
-2. Open `samples/RESOLUTION_NOTES.md`; explain why source confirmation is necessary for the conflict and missing ID. Show the manually prepared resolved CSV and its PASS report.
-3. Explain the illustrative amount difference, and why an order can validly have multiple item rows.
-4. Run difficult-case.csv; explain why ambiguous dates require a declared convention.
-5. Run invalid-schema.csv; show controlled failure rather than a traceback.
-
-## Implementation and limits
-
-Implemented: optional evidence-based model interpretation with local citation/value validation, query-aware reconciliation, declared join-fanout diagnostics, traceable Markdown/JSON evidence reports, correction demos, JSON/CSV differences, single-file CLI, staged SQL execution with retained tables and logs, validated JSON contracts, composite keys, deterministic checks, and automated verification. Runtime AI uses the real provider; offline tests use explicitly labeled injected responses. All sample data is synthetic. Deferred: graphical UI, warehouse integration, catalog lookups, cross-batch duplicate detection, automatic repair, AI contract drafting, and large-file benchmarks. Adding new rule types still requires Python changes; configuration supports the documented checks, not arbitrary business expressions. Records and findings are retained in memory. Intended for small demonstration batches.
-
-See `docs/CASE_STUDY.md` for the working submission draft and decisions. It still needs applicant review of the experience wording, current-workflow details, and final time declaration.
-
-See [docs/AI_EXTENSION.md](docs/AI_EXTENSION.md) for other AI experiments. The implemented analysis does not generate or execute business rules.
-
-## Time and AI disclosure
-
-Codex assisted with ideation, code, synthetic samples, tests, and documentation. Checks include hand-specified expected findings, 68 automated tests, and manually reviewed real model calls documented in AI_EVALUATION.md. Tests and documentation were also AI-assisted and do not independently establish real-world usefulness. Runtime model interpretation is optional and separate from development assistance. No prior project code was reused.
+The **71 offline tests** cover exact money, query masking, equal totals with unequal details, retained duplicate keys, declared-join uncertainty, failed-step evidence, source preservation, rejected model citations, and package boundaries. Offline AI tests use clearly labeled injected providers; the normal application uses a real provider when --ai is requested.
 
 ```sh
-python3 scripts/work_timer.py start "Describe work"
-python3 scripts/work_timer.py status
-python3 scripts/work_timer.py stop "Describe outcome"
+python3 scripts/package_submission.py
 ```
 
-Measured sessions are in `docs/WORK_LOG.md`; stop during breaks. Earlier discussion and work before timer activation are not reconstructed. Add them honestly to the final time declaration. Git history records milestones, not exact effort. Stop case-study work at four hours total.
+The ZIP and package-audit.json are written under outputs/submission/. Packaging requires the included PDF and copies only files listed in submission_manifest.json; each entry is hashed in CONTENTS.json. It excludes local working notes, credentials, .git history, caches, and generated run directories. The package includes source, tests, sample inputs/expectations, setup instructions, the written explanation, and demonstration guidance. Existing ZIP destinations are not overwritten; use --output with a new path for another package.
+
+The PDF is already included. To rebuild it, separately install requirements-docs.txt and run `python3 scripts/build_submission.py`; this is not required to run the prototype. The builder fails if content exceeds the four-page layout.
+
+## Decisions, limits, and disclosure
+
+This is an inspectable local workflow for small datasets. Explicit checkpoint alignment, a common detail grain/currency, and supplied business definitions are assumptions. General SQL decomposition, warehouse/catalog adapters, a UI, automatic repair, AI contract drafting, and large-data performance are deferred. Existing warehouse checks may be the better production solution; usefulness and review-time savings are unmeasured.
+
+Codex assisted with planning, implementation, synthetic fixtures, tests, documentation, and review. No prior project code was reused; preflight code was built earlier within this exercise. Optional runtime AI is separate from development assistance. See the [time disclosure](docs/TIME_DISCLOSURE.md) for measured sessions and the applicant's approximately 30 minutes of review, with unrecorded discussion explicitly acknowledged.
+
+Technical references: [query semantics](docs/RECONCILIATION.md), [executor](docs/SQL_EXECUTOR.md), [join diagnostics](docs/JOIN_DIAGNOSTICS.md), and [supporting preflight contracts](docs/PREFLIGHT.md).

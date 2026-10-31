@@ -1,4 +1,4 @@
-"""Run two synthetic corrections, retaining before/after evidence and unchanged-source hashes."""
+"""Demonstrate corrections, query masking, and a failed step using synthetic inputs."""
 import argparse
 import hashlib
 import json
@@ -45,7 +45,28 @@ def run_demo(output_dir):
         print(f'{name}: {before["status"]} -> {after["status"]}; '
               f'difference {item["before"]["difference_cents"]} -> {item["after"]["difference_cents"]} cents; '
               f'source files unchanged={unchanged}')
-    summary = {'data': 'synthetic', 'verified': all(item['verified'] for item in results), 'cases': results}
+    base = ROOT / 'samples/reconciliation/filter_mismatch'
+    scoped = run_reconciliation(base / 'job-paid-query.json', output_dir / 'paid-query')
+    scoped_verified = (scoped['status'] == 'MATCH' and scoped['query_result']['status'] == 'MATCH'
+                       and scoped['first_raw_divergence'] == 'filtered'
+                       and scoped['first_query_scope_divergence'] is None
+                       and scoped['checkpoints'][0]['raw']['difference_cents'] == 147900)
+    query_example = {'verified': scoped_verified, 'status': scoped['status'],
+                     'first_raw_divergence': scoped['first_raw_divergence'],
+                     'first_query_scope_divergence': scoped['first_query_scope_divergence'],
+                     'report': scoped['human_report']}
+    print(f'paid_query: {scoped["status"]}; raw divergence={scoped["first_raw_divergence"]}; '
+          f'query-scope divergence={scoped["first_query_scope_divergence"] or "none"}')
+    failed = run_reconciliation(base / 'job-invalid-sql.json', output_dir / 'invalid-sql')
+    error = failed.get('error', {})
+    invalid_verified = failed['status'] == 'ERROR' and error.get('pipeline') == 'B' and error.get('step') == 'filter'
+    invalid_example = {'verified': invalid_verified, 'status': failed['status'],
+                       'error': error, 'report': failed['human_report']}
+    print(f'invalid_sql: {failed["status"]}; failed pipeline={error.get("pipeline")}; step={error.get("step")} '
+          '(expected controlled failure)')
+    summary = {'data': 'synthetic', 'verified': all(item['verified'] for item in results)
+               and scoped_verified and invalid_verified, 'cases': results,
+               'query_scope_example': query_example, 'invalid_input_example': invalid_example}
     write_report(output_dir / 'demo-summary.json', summary)
     print(f'Demo summary: {output_dir / "demo-summary.json"}')
     return summary

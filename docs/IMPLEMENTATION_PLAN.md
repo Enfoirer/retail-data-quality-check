@@ -11,7 +11,7 @@ All deliverables, including documentation, sample labels, reports, and code comm
 | 3 | Implement query-aware metric, record, dimension, and checkpoint reconciliation | Identify filtered, I003, and Beijing's CNY 1,479 difference; distinguish dataset differences from query differences; inspect records even when totals match | Complete |
 | 4 | Add a join-fanout case, rerun after correction, and generate evidence reports | Preserve duplicate keys, trace join matches, and verify filter/join corrections with unchanged sources | Complete |
 | 5 | Add evidence-based AI analysis | Cite actual evidence, distinguish observations from hypotheses and recommendations, and retain computed reports if the model fails | Complete |
-| 6 | Prepare submission artifacts and demonstration | Reproducible README; explanation of no more than four pages matching actual behavior; disclose time, AI, synthetic data, and limitations | Pending |
+| 6 | Prepare submission artifacts and demonstration | Reproducible README; explanation of no more than four pages matching actual behavior; disclose time, AI, synthetic data, and limitations | Complete |
 
 ## Step 1: Establish comparison semantics
 
@@ -31,7 +31,7 @@ Step 1 delivers fixture inputs, SQL, a job description, and a manual answer key.
 
 Run `python3 -m src.sql_runner samples/reconciliation/filter_mismatch/job.json` from the repository root. See [SQL_EXECUTOR.md](SQL_EXECUTOR.md) for artifacts, inspection commands, and failure behavior.
 
-The executor validates the job, loads shared sources, materializes each stage, and retains run.sqlite plus execution.json in a new run directory. Twelve executor tests cover retained stages, independent answer keys, exact money, invalid jobs and inputs, checkpoint columns, query failures, cross-pipeline reads, source preservation, and output-directory protection. After Step 5, the full suite contains 68 passing tests.
+The executor validates the job, loads shared sources, materializes each stage, and retains run.sqlite plus execution.json in a new run directory. Twelve executor tests cover retained stages, independent answer keys, exact money, invalid jobs and inputs, checkpoint columns, query failures, cross-pipeline reads, source preservation, and output-directory protection. After Step 6, the full suite contains 71 passing tests.
 
 ## Step 3: Reconcile the user request and trace differences
 
@@ -51,6 +51,12 @@ Run the reconciliation command with --ai, or analyze a completed reconciliation.
 
 The adapter sends a checked projection of requirements, SQL, and computed evidence to the OpenAI Responses API. Structured output separates observations, hypotheses, and human verification steps. Local validation checks actual evidence IDs, exact paths/values, and unchanged deterministic status; it does not establish semantic entailment. Requests, raw responses, validation outcomes, and readable analyses are retained. Model errors and invalid responses preserve the computed report. Seventeen new offline tests cover this boundary. No runtime mock or automatic repair is implemented.
 
+## Step 6: Prepare and verify the submission
+
+The primary README now describes the final reconciliation workflow. CASE_STUDY.md renders to the included four-page PDF, and DEMO.md provides a 15-minute walkthrough. The runnable demo covers filter and join corrections, a scoped MATCH over unequal raw datasets, and a deliberately failed B/filter step. The earlier preflight checker remains a supporting component; its detailed instructions moved to PREFLIGHT.md. The obsolete AI-extension design note was removed.
+
+An explicit 80-file manifest builds a hashed source ZIP and excludes applicant working notes, credentials, Git internals, caches, and generated runs. Clean extraction exposed an omitted prompt resource, which was added to the manifest and covered by a regression test. The final 71-test suite and all demonstration cases passed from an extracted package without site-packages or API credentials. Three packaging tests cover exclusion, unsafe paths, and required AI resources. TIME_DISCLOSURE.md separates timer records from the applicant's approximately 30 minutes of review and does not invent earlier discussion time.
+
 ## Subsequent implementation conventions
 
 Resolve paths relative to the job JSON directory and materialize explicitly provided steps. Load base tables once into the same retained SQLite database for both pipelines.
@@ -59,4 +65,4 @@ The job's schema_version 1 is a new configuration format, independent of the exi
 Always include record-level checks. Determine the first observed divergence using the declared checkpoint order; it does not automatically establish the business root cause.
 Preserve duplicate keys and report matching ambiguity. Do not overwrite duplicates in a dictionary and report equality. Join diagnostics use explicit join descriptions and observed results; arbitrary SQL parsing is outside the initial scope.
 
-The implemented AI feature explains generated evidence together with supplied SQL and business requirements. The default model is gpt-5-mini, configurable by environment or CLI. Step 6 still needs a concise final submission matching the completed workflow, applicant review, and an honest total-time declaration.
+The implemented AI feature explains generated evidence together with supplied SQL and business requirements. The default model is gpt-5-mini, configurable by environment or CLI. Step 6 supplies the final four-page explanation, runnable submission package, walkthrough, and honest time disclosure. Applicant review time is self-reported; earlier unmeasured discussion remains explicitly unquantified.

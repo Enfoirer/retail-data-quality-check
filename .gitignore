@@ -11,3 +11,6 @@ venv/
 outputs/
 # Keep actual company/customer data out of the repository.
 data/private/
+tmp/
+# Applicant's working notes, excluded from the submission.
+docs/data_reconciliation_quality_framework.md

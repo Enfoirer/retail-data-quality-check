@@ -81,7 +81,7 @@ Tests resolve every evidence pointer back to the saved JSON value and verify tra
 
 ## Verification
 
-The complete suite has 68 passing tests after Step 5. Eleven Step 4 tests cover:
+The complete suite has 71 passing tests after Step 6. Eleven Step 4 tests cover:
 
 - Fanout, correction, retained history/duplicates, and source-snapshot equality.
 - Exact evidence pointer resolution and report contents.

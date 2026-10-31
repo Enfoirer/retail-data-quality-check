@@ -1,0 +1,2 @@
+# Keep generated submission PDFs binary and protect them from text conversion.
+*.pdf binary

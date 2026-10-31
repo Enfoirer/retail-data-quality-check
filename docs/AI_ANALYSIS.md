@@ -75,6 +75,6 @@ No credential/SDK, provider errors, incomplete responses, and refusals produce U
 
 ## Verification and next investigation
 
-Run `python3 -W error::ResourceWarning -m unittest discover -s tests -q`. The full suite contains 68 tests, including 17 new tests for accepted provenance, reference/value rejection, supplied-field boundaries, stale evidence, context limits, provider failures, retained responses, optional invocation, protected artifacts, retry behavior, strict JSON, and the semantic-review limitation. Tests run without network access or the optional SDK.
+Run `python3 -W error::ResourceWarning -m unittest discover -s tests -q`. The final suite contains 71 tests, including 17 Step 5 tests for accepted provenance, reference/value rejection, supplied-field boundaries, stale evidence, context limits, provider failures, retained responses, optional invocation, protected artifacts, retry behavior, strict JSON, and the semantic-review limitation. Tests run without network access or the optional SDK.
 
 See [AI_EVALUATION.md](AI_EVALUATION.md) for the real model calls and review findings. These small synthetic checks establish an integration, not measured investigation-time savings or reliable causal diagnosis. Next, compare reviewer effort and unsupported claims against the deterministic report alone using held-out cases, ambiguous requirements, and adversarial task text. Broader SQL lineage, warehouse access, automatic fixes, and AI-generated business contracts remain deferred.

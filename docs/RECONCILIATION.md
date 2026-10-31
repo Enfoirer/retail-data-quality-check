@@ -105,6 +105,6 @@ Structured cells in CSV are JSON encoded. Empty difference files still contain h
 
 ## Verification and limitations
 
-The full suite has 68 passing tests after Step 5. Fourteen reconciliation tests cover manual expected results, query masking, corrected equality, offsetting changes, replaced keys with equal totals, duplicate and missing keys, empty scopes, invalid amount types, parameterized/range/membership filters, invalid query definitions, execution failures, backward-compatible jobs, and CLI exit codes.
+The full suite has 71 passing tests after Step 6. Fourteen reconciliation tests cover manual expected results, query masking, corrected equality, offsetting changes, replaced keys with equal totals, duplicate and missing keys, empty scopes, invalid amount types, parameterized/range/membership filters, invalid query definitions, execution failures, backward-compatible jobs, and CLI exit codes.
 
 Records and groups are retained in memory for small demonstration batches. Filters are limited to fields available at every checkpoint. Arbitrary aggregate SQL lineage and scale benchmarks remain later work. Step 4 supplies a dedicated join-fanout scenario, declared-join observations, report.md, and evidence.json; see [JOIN_DIAGNOSTICS.md](JOIN_DIAGNOSTICS.md). Step 5 adds optional model analysis with --ai; see [AI_ANALYSIS.md](AI_ANALYSIS.md). Model output does not change the computed status or CLI exit code. Deterministic report.md stays separate from ai/analysis.md.
