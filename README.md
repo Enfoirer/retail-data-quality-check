@@ -7,6 +7,7 @@ A working, local CSV preflight tool for retail order-line batches. It locates pr
 Python 3.10+; standard library only. Developed and tested on Python 3.13.7. No install, API key, paid service, or production account required. Run from the repository root:
 
 ```sh
+python3 demo.py
 python3 src/retail_check.py samples/clean.csv --output outputs/clean.json
 python3 src/retail_check.py samples/typical-errors.csv --output outputs/errors.json
 python3 src/retail_check.py samples/difficult-case.csv --output outputs/difficult.json
@@ -15,6 +16,17 @@ python3 -m unittest discover -s tests -v
 ```
 
 The last three sample commands intentionally return nonzero exit codes. Exit codes: **0** PASS, **1** BLOCK or REVIEW, **2** invalid input/output or unreadable file. Existing report files are replaced; the input CSV cannot be the report destination. Reports contain source values in messages such as invalid status; handle reports according to your data policy.
+
+## End-to-end investigation example
+
+`python3 demo.py` runs real checks on a before batch and a manually prepared resolved batch, then writes JSON reports to `outputs/demo/`:
+
+- Before: 6 records, BLOCK, 3 errors (duplicate item, missing product ID, conflicting item amount).
+- Manual source-confirmation steps: see `samples/RESOLUTION_NOTES.md`. These confirmations are synthetic and supplied as a demonstration answer key. The program does not choose which conflicting value is true.
+- After: 4 records, PASS, no findings.
+- Illustrative raw row-amount sums: CNY 360.50 before, CNY 220.50 after. The CNY 140.00 difference comes from a repeated 100.00 snapshot and a superseded 40.00 snapshot in this fixture. This is not a measured saving or a general impact estimate.
+
+The example uses all-paid CNY records under a one-current-snapshot-per-item contract. Original files remain unchanged. You can edit a copy of the before file yourself, following the supplied confirmations, and rerun the validator to demonstrate the human step live.
 
 ## Expected sample outcomes
 
@@ -45,21 +57,21 @@ Extra columns are allowed and ignored. UTF-8 (including BOM) is supported. Missi
 
 ## Demonstration (about five minutes)
 
-1. Run clean.csv; show PASS and explain why repeating order_id is allowed.
-2. Run typical-errors.csv; open the JSON report and locate source records needing attention.
-3. Run difficult-case.csv; explain why conflicting records and ambiguous dates require investigation.
-4. Run invalid-schema.csv; show controlled failure rather than a traceback.
-5. Explain how a documented date format resolves a review, and how a different refund convention would require changing rules.
+1. Run `python3 demo.py`; inspect `outputs/demo/before-report.json` and locate the three source problems.
+2. Open `samples/RESOLUTION_NOTES.md`; explain why source confirmation is necessary for the conflict and missing ID. Show the manually prepared resolved CSV and its PASS report.
+3. Explain the illustrative amount difference, and why an order can validly have multiple item rows.
+4. Run difficult-case.csv; explain why ambiguous dates require a declared convention.
+5. Run invalid-schema.csv; show controlled failure rather than a traceback.
 
 ## Implementation and limits
 
-Implemented: CLI, seven-rule-field schema, deterministic checks, human-readable findings, JSON export, exit codes, synthetic samples, and automated checks. No mocked external API is involved; sample data alone is synthetic. Deferred: graphical UI, warehouse integration, catalog lookups, cross-batch duplicate detection, configurable business rules, automatic repair, and large-file benchmarks. Duplicate detection uses memory proportional to distinct IDs; findings are also retained in memory. Intended for small demonstration batches.
+Implemented: CLI, seven-field schema, deterministic checks, human-readable findings, JSON export, exit codes, synthetic samples, a human-resolution demonstration, and automated checks. No mocked external API is involved; sample data alone is synthetic. Deferred: graphical UI, warehouse integration, catalog lookups, cross-batch duplicate detection, configurable business rules, automatic repair, and large-file benchmarks. Duplicate detection uses memory proportional to distinct IDs; findings are also retained in memory. Intended for small demonstration batches.
 
 See `docs/CASE_STUDY.md` for the working submission draft and decisions. It still needs applicant review of the experience wording, current-workflow details, and final time declaration.
 
 ## Time and AI disclosure
 
-Codex assisted with ideation, code, synthetic samples, tests, and documentation. Checks include hand-specified expected findings and seven automated tests; these were also AI-assisted and are not independent evidence of real-world usefulness. No prior project code was reused.
+Codex assisted with ideation, code, synthetic samples, tests, and documentation. Checks include hand-specified expected findings and eight automated tests; these were also AI-assisted and are not independent evidence of real-world usefulness. No prior project code was reused.
 
 ```sh
 python3 scripts/work_timer.py start "Describe work"

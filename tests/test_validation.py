@@ -1,9 +1,11 @@
 import contextlib
 import io
 import tempfile
+import json
 import unittest
 from pathlib import Path
 from src.retail_check import COLUMNS, InputError, main, validate
+from demo import run_demo
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -24,6 +26,21 @@ class ValidationTests(unittest.TestCase):
         result = validate(ROOT / 'samples/difficult-case.csv')
         self.assertEqual([f['code'] for f in result['findings']],
                          ['date_format_review', 'conflicting_id', 'invalid_amount'])
+
+    def test_resolution_demo_preserves_inputs_and_matches_manual_answer_key(self):
+        paths = [ROOT / 'samples/batch-before.csv', ROOT / 'samples/batch-resolved.csv']
+        originals = [path.read_bytes() for path in paths]
+        with tempfile.TemporaryDirectory() as directory, contextlib.redirect_stdout(io.StringIO()):
+            result = run_demo(Path(directory))
+            self.assertEqual(result['before'], {
+                'records': 6, 'decision': 'BLOCK', 'errors': 3, 'row_amount_sum_CNY': '360.50'})
+            self.assertEqual(result['after'], {
+                'records': 4, 'decision': 'PASS', 'errors': 0, 'row_amount_sum_CNY': '220.50'})
+            self.assertEqual(result['row_amount_difference_CNY'], '140.00')
+            report = json.loads((Path(directory) / 'before-report.json').read_text())
+            self.assertEqual({(f['row'], f['code']) for f in report['findings']}, {
+                (3, 'duplicate_id'), (5, 'required'), (7, 'conflicting_id')})
+        self.assertEqual([path.read_bytes() for path in paths], originals)
 
     def check_text(self, text, fmt=None):
         with tempfile.TemporaryDirectory() as directory:
