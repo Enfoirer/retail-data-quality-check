@@ -4,7 +4,7 @@ A local prototype that executes two explicit SQL pipelines over shared retail sn
 
 ## SQL reconciliation work in progress
 
-The SQL workflow now executes two pipelines over shared source snapshots and reconciles a common filtered/grouped user request. Steps 1–4 are complete. Run:
+The SQL workflow now executes two pipelines over shared source snapshots and reconciles a common filtered/grouped user request. Steps 1–5 are complete; submission preparation remains Step 6. Run:
 
 ```sh
 python3 -m src.reconcile samples/reconciliation/filter_mismatch/job.json
@@ -13,7 +13,7 @@ python3 -m src.reconcile samples/reconciliation/filter_mismatch/job-paid-query.j
 
 The first command intentionally exits 1: B retains an additional cancelled item worth CNY 1,479. The second exits 0: a paid-only user query excludes that item, so scoped details and query results agree while raw dataset differences remain visible. Each run creates a new output directory with retained SQLite tables, execution metadata, reconciliation.json, and difference CSV files.
 
-See [docs/RECONCILIATION.md](docs/RECONCILIATION.md) for query semantics and [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for remaining milestones. The execution-only command remains `python3 -m src.sql_runner samples/reconciliation/filter_mismatch/job.json`; its SUCCESS status does not mean reconciliation passed. Declared join diagnostics and readable evidence reports are available; runtime AI is pending. The commands below run the earlier single-file checker.
+See [docs/RECONCILIATION.md](docs/RECONCILIATION.md) for query semantics and [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for remaining milestones. The execution-only command remains `python3 -m src.sql_runner samples/reconciliation/filter_mismatch/job.json`; its SUCCESS status does not mean reconciliation passed. Declared join diagnostics, readable evidence reports, and optional model analysis are available. The setup section below also includes the earlier single-file checker.
 
 Run both correction demonstrations with source-hash verification:
 
@@ -23,9 +23,19 @@ python3 demo_reconciliation.py
 
 The filter difference changes from CNY 1,479 to zero. The history-join difference changes from CNY 100 to zero, while all historical source rows remain retained. See [docs/JOIN_DIAGNOSTICS.md](docs/JOIN_DIAGNOSTICS.md). Each reconciliation run now produces report.md and evidence.json in addition to the existing artifacts.
 
+## Optional AI interpretation
+
+Install `python3 -m pip install -r requirements-ai.txt` and set OPENAI_API_KEY in your environment, then run:
+
+```sh
+python3 -m src.reconcile samples/reconciliation/join_fanout/job.json --ai
+```
+
+The model receives saved evidence, executed SQL, and supplied business requirements. It produces separate observations, hypotheses, and verification suggestions in ai/analysis.md. Local checks reject invented evidence IDs, incorrect anchor values, and changed deterministic statuses. Correct citations do not prove that the prose is justified; human review remains required. Missing credentials or model failure leave the deterministic report available. See [docs/AI_ANALYSIS.md](docs/AI_ANALYSIS.md) for setup, artifacts, limits, and standalone/retry commands, and [docs/AI_EVALUATION.md](docs/AI_EVALUATION.md) for actual model evaluation.
+
 ## Setup and run
 
-Python 3.10+; standard library only. Developed and tested on Python 3.13.7. No install, API key, paid service, or production account required. Run from the repository root:
+Python 3.10+; the deterministic workflow uses only the standard library. Developed and tested on Python 3.13.7. These commands need no install, API key, paid service, or production account. Optional model analysis requires the separate setup above. Run from the repository root:
 
 ```sh
 python3 demo.py
@@ -114,15 +124,15 @@ Extra columns are allowed and ignored. UTF-8 (including BOM) is supported. Missi
 
 ## Implementation and limits
 
-Implemented: query-aware reconciliation, declared join-fanout diagnostics, traceable Markdown/JSON evidence reports, correction demos, JSON/CSV differences, single-file CLI, staged SQL executor with retained SQLite tables and execution logs, validated JSON contracts, source-specific field names and composite keys, deterministic checks, human-readable findings, JSON export, exit codes, synthetic samples, a human-resolution demonstration, and automated checks. No mocked external API is involved; sample data alone is synthetic. Deferred: graphical UI, warehouse integration, catalog lookups, cross-batch duplicate detection, automatic repair, and large-file benchmarks. Adding new rule types still requires Python changes; configuration supports the documented checks, not arbitrary business expressions. Duplicate detection uses memory proportional to distinct IDs; findings are also retained in memory. Intended for small demonstration batches.
+Implemented: optional evidence-based model interpretation with local citation/value validation, query-aware reconciliation, declared join-fanout diagnostics, traceable Markdown/JSON evidence reports, correction demos, JSON/CSV differences, single-file CLI, staged SQL execution with retained tables and logs, validated JSON contracts, composite keys, deterministic checks, and automated verification. Runtime AI uses the real provider; offline tests use explicitly labeled injected responses. All sample data is synthetic. Deferred: graphical UI, warehouse integration, catalog lookups, cross-batch duplicate detection, automatic repair, AI contract drafting, and large-file benchmarks. Adding new rule types still requires Python changes; configuration supports the documented checks, not arbitrary business expressions. Records and findings are retained in memory. Intended for small demonstration batches.
 
 See `docs/CASE_STUDY.md` for the working submission draft and decisions. It still needs applicant review of the experience wording, current-workflow details, and final time declaration.
 
-See `docs/AI_EXTENSION.md` for proposed AI features; no model or AI-generated business rules run in this prototype.
+See [docs/AI_EXTENSION.md](docs/AI_EXTENSION.md) for other AI experiments. The implemented analysis does not generate or execute business rules.
 
 ## Time and AI disclosure
 
-Codex assisted with ideation, code, synthetic samples, tests, and documentation. Checks include hand-specified expected findings and 51 automated tests; these were also AI-assisted and are not independent evidence of real-world usefulness. No prior project code was reused.
+Codex assisted with ideation, code, synthetic samples, tests, and documentation. Checks include hand-specified expected findings, 68 automated tests, and manually reviewed real model calls documented in AI_EVALUATION.md. Tests and documentation were also AI-assisted and do not independently establish real-world usefulness. Runtime model interpretation is optional and separate from development assistance. No prior project code was reused.
 
 ```sh
 python3 scripts/work_timer.py start "Describe work"

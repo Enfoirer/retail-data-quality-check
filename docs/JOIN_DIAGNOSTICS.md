@@ -1,6 +1,6 @@
 # Step 4: Join Fanout, Correction, and Traceable Reports
 
-The reconciliation command now diagnoses declared joins and produces a readable English evidence report. Diagnostics never delete, merge, or choose a winning duplicate row. Runtime AI is not integrated yet.
+The reconciliation command diagnoses declared joins and produces a readable English evidence report. Diagnostics never delete, merge, or choose a winning duplicate row. Step 5 optionally interprets this evidence using a model; see [AI_ANALYSIS.md](AI_ANALYSIS.md).
 
 ## Run both before/after demonstrations
 
@@ -81,7 +81,7 @@ Tests resolve every evidence pointer back to the saved JSON value and verify tra
 
 ## Verification
 
-The complete suite has 51 passing tests. Eleven new tests cover:
+The complete suite has 68 passing tests after Step 5. Eleven Step 4 tests cover:
 
 - Fanout, correction, retained history/duplicates, and source-snapshot equality.
 - Exact evidence pointer resolution and report contents.
@@ -94,4 +94,4 @@ The complete suite has 51 passing tests. Eleven new tests cover:
 - Declared inputs inconsistent with observed read dependencies.
 - Non-JSON trace types reported as inconclusive instead of breaking report serialization.
 
-These are small local fixtures. Per-left-row matching prioritizes inspectable evidence; scale optimization, general SQL lineage, and automatic repairs remain deferred. Step 5 will analyze this deterministic evidence using a model.
+These are small local fixtures. Per-left-row matching prioritizes inspectable evidence; scale optimization, general SQL lineage, and automatic repairs remain deferred. Optional model interpretation preserves the deterministic evidence and requires human review.

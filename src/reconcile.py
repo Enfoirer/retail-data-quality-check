@@ -233,7 +233,7 @@ def export_csv(output_dir, report, comparison):
     return str(directory)
 
 
-def run_reconciliation(job_path, output_dir=None):
+def run_reconciliation(job_path, output_dir=None, ai=False, ai_model=None):
     execution = run_job(job_path, output_dir)
     directory = Path(execution['report_path']).parent
     path = directory / 'reconciliation.json'
@@ -251,6 +251,13 @@ def run_reconciliation(job_path, output_dir=None):
     report['report_path'] = str(path)
     write_evidence_artifacts(directory, report, execution)
     write_report(path, report)
+    if ai:
+        if __package__:
+            from .ai_analysis import analyze_run
+        else:
+            from ai_analysis import analyze_run
+        analysis = analyze_run(path, model=ai_model)
+        report['ai_analysis'] = {key: analysis[key] for key in ('status', 'model', 'report_path', 'human_report')}
     return report
 
 
@@ -258,9 +265,11 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('job', type=Path)
     parser.add_argument('--output-dir', type=Path, help='New run directory; existing directories are not overwritten.')
+    parser.add_argument('--ai', action='store_true', help='Request optional evidence-grounded model analysis.')
+    parser.add_argument('--ai-model', default=None, help='Override OPENAI_MODEL or the default analysis model.')
     args = parser.parse_args(argv)
     try:
-        report = run_reconciliation(args.job, args.output_dir)
+        report = run_reconciliation(args.job, args.output_dir, ai=args.ai, ai_model=args.ai_model)
     except (JobError, OSError, sqlite3.Error) as error:
         print(f'RECONCILIATION ERROR: {error}', file=sys.stderr)
         return 2
@@ -278,6 +287,8 @@ def main(argv=None):
         print(f'CSV differences: {report["csv_directory"]}')
     print(f'Report: {report["report_path"]}')
     print(f'Human report: {report["human_report"]}')
+    if 'ai_analysis' in report:
+        print(f'AI analysis: {report["ai_analysis"]["status"]}; {report["ai_analysis"]["human_report"]}')
     return {'MATCH': 0, 'DIFFERENT': 1}.get(report['status'], 2)
 
 

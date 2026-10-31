@@ -1,10 +1,10 @@
-# AI extension candidates (design only)
+# AI Features and Extension Candidates
 
-Status: none of these model features is implemented. The current checker runs locally and deterministically. Codex assistance during development is disclosed separately from runtime AI.
+Status: evidence-based reconciliation analysis is implemented as an optional runtime feature. Other candidates below remain designs. Codex assistance during development is disclosed separately from runtime model use.
 
 ## Selected milestone: evidence-based reconciliation analysis
 
-The current implementation plan selects an investigation assistant for Step 5. It will receive computed query and checkpoint differences, SQL, and the supplied business requirement, then cite evidence while separating observations, hypotheses, and verification steps. Contract drafting remains an alternative experiment below. No runtime model feature is implemented yet.
+Step 5 implements an investigation assistant receiving computed query/checkpoint differences, SQL, and supplied business requirements. It cites evidence while separating observations, hypotheses, and verification steps. See [AI_ANALYSIS.md](AI_ANALYSIS.md) for invocation, local validation, failure behavior, and semantic limits; see [AI_EVALUATION.md](AI_EVALUATION.md) for real calls and review findings. Contract drafting remains an alternative experiment below.
 
 ## Alternative experiment: draft a data contract from a supplied specification
 
