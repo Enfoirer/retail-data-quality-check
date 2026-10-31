@@ -1,0 +1,5 @@
+order_item_id,order_id,product_id,order_date,amount,currency,status
+I001,O001,P01,2026-10-01,100.00,CNY,paid
+I002,O001,P02,2026-10-01,25.50,CNY,paid
+I003,O002,P01,2026-10-02,-50.00,CNY,refunded
+I004,O003,P03,2026-10-02,0.00,CNY,cancelled
