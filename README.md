@@ -55,7 +55,7 @@ Extra columns are allowed and ignored. UTF-8 (including BOM) is supported. Missi
 
 Implemented: CLI, seven-rule-field schema, deterministic checks, human-readable findings, JSON export, exit codes, synthetic samples, and automated checks. No mocked external API is involved; sample data alone is synthetic. Deferred: graphical UI, warehouse integration, catalog lookups, cross-batch duplicate detection, configurable business rules, automatic repair, and large-file benchmarks. Duplicate detection uses memory proportional to distinct IDs; findings are also retained in memory. Intended for small demonstration batches.
 
-See `docs/CASE_STUDY.md` for the working submission draft and decisions. It still needs applicant review and completion of the two alternative-problem observations.
+See `docs/CASE_STUDY.md` for the working submission draft and decisions. It still needs applicant review of the experience wording, current-workflow details, and final time declaration.
 
 ## Time and AI disclosure
 
