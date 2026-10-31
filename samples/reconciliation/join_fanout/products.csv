@@ -1,0 +1,5 @@
+product_id,product_version_id,is_current,category
+P01,V001,0,Electronics Legacy
+P01,V002,1,Electronics
+P02,V003,1,Home
+P03,V004,1,Books

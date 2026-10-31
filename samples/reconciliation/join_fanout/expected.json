@@ -1,0 +1,38 @@
+{
+  "note": "Hand-specified synthetic acceptance values; never an input to the reconciliation engine.",
+  "before": {
+    "status": "AMBIGUOUS",
+    "query_status": "DIFFERENT",
+    "first_divergence": "enriched",
+    "A_rows": 2,
+    "B_rows": 3,
+    "A_amount_cents": 30000,
+    "B_amount_cents": 40000,
+    "difference_cents": 10000,
+    "duplicated_key": {
+      "order_item_id": "I001"
+    },
+    "duplicate_copies": 2,
+    "B_right_match_count": 2,
+    "matched_versions": [
+      "V001",
+      "V002"
+    ],
+    "join_status": "FANOUT"
+  },
+  "after": {
+    "status": "MATCH",
+    "query_status": "MATCH",
+    "A_rows": 2,
+    "B_rows": 2,
+    "A_amount_cents": 30000,
+    "B_amount_cents": 30000,
+    "difference_cents": 0,
+    "join_status": "PASS"
+  },
+  "unchanged_sources": {
+    "orders_rows": 3,
+    "product_history_rows": 4
+  },
+  "fix": "Change B to join b_products_current; preserve all raw history and both raw input files."
+}

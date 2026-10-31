@@ -95,4 +95,4 @@ python3 -m unittest discover -s tests -p test_sql_runner.py -v
 - Materialize one query per SQL file. Statements that mutate sources and multi-statement SQL scripts are not accepted by the CREATE TABLE AS execution interface.
 - Verify that materialized checkpoint outputs contain the configured comparison columns.
 
-The job's join declaration is retained as evidence for later join diagnostics; this milestone does not verify cardinality or infer whether a join is correct. The execution-only command does not reconcile output values or metrics; the separate Step 3 command does. Large datasets, arbitrary SQL decomposition, runtime AI, and automatic SQL repair remain outside Step 2.
+The job's join declaration is retained for [Step 4 diagnostics](JOIN_DIAGNOSTICS.md); this milestone does not verify cardinality or infer whether a join is correct. The execution-only command does not reconcile output values or metrics; the separate Step 3 command does. Large datasets, arbitrary SQL decomposition, runtime AI, and automatic SQL repair remain outside Step 2.

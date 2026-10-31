@@ -11,9 +11,13 @@ from pathlib import Path
 
 if __package__:
     from .job_config import JobError
+    from .join_diagnostics import diagnose_joins
+    from .evidence_report import write_evidence_artifacts
     from .sql_runner import now, quote, run_job, write_report
 else:
     from job_config import JobError
+    from join_diagnostics import diagnose_joins
+    from evidence_report import write_evidence_artifacts
     from sql_runner import now, quote, run_job, write_report
 
 
@@ -184,6 +188,7 @@ def analyze_execution(execution):
                             ('DIFFERENT' if report['detail_status'] != 'MATCH'
                              or report['query_result']['status'] != 'MATCH' else 'MATCH'))
         report['final_checkpoint'] = final['name']
+        report['join_diagnostics'] = diagnose_joins(db, execution)
     report['finished_at'] = now()
     return report
 
@@ -244,6 +249,7 @@ def run_reconciliation(job_path, output_dir=None):
                       'error': {'phase': 'reconciliation', 'message': str(error)},
                       'execution_report': execution['report_path'], 'database': execution['database']}
     report['report_path'] = str(path)
+    write_evidence_artifacts(directory, report, execution)
     write_report(path, report)
     return report
 
@@ -271,6 +277,7 @@ def main(argv=None):
                   f'B={detail["B"]["amount_sum_cents"]} cents; B-A={detail["difference_cents"]} cents')
         print(f'CSV differences: {report["csv_directory"]}')
     print(f'Report: {report["report_path"]}')
+    print(f'Human report: {report["human_report"]}')
     return {'MATCH': 0, 'DIFFERENT': 1}.get(report['status'], 2)
 
 

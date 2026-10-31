@@ -29,6 +29,14 @@ python3 -m src.reconcile samples/reconciliation/filter_mismatch/job-paid-query.j
 
 The default job filters the reporting date and groups by province. It exposes the extra I003 item and exits 1. The paid-query variant adds status = paid at query time, leaving raw dataset differences visible but producing equal query results and scoped details; it exits 0. Both use the same source files and pipeline SQL. See [the reconciliation guide](../../../docs/RECONCILIATION.md).
 
+## Verify the corrected filter
+
+```sh
+python3 -m src.reconcile samples/reconciliation/filter_mismatch/job-fixed-filter.json
+```
+
+This variant corrects the pipeline filter itself, without masking it through a query filter. Both raw and scoped final results agree. Run `python3 demo_reconciliation.py` for separate before/after evidence directories and source-hash verification. The original source files and faulty SQL remain unchanged.
+
 ## Manual verification
 
 - Business requirement: final results include paid lines only; enrichment preserves one row per order line.

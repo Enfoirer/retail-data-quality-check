@@ -1,0 +1,4 @@
+order_item_id,order_id,product_id,order_date,status,province,amount,currency
+I001,O001,P01,2026-10-01,paid,Beijing,100.00,CNY
+I002,O001,P02,2026-10-01,paid,Shanghai,200.00,CNY
+I003,O002,P03,2026-10-01,cancelled,Beijing,1479.00,CNY

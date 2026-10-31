@@ -89,6 +89,8 @@ All compared amounts must be integer minor units. NULL, REAL, or TEXT amount out
 
 | File | Contents |
 |---|---|
+| report.md | Readable evidence report, including SQL and diagnostic references |
+| evidence.json | Evidence ledger linking IDs to exact saved JSON values |
 | run.sqlite | Shared inputs and retained SQL stage tables |
 | execution.json | Actual job, SQL, dependencies, schemas, and execution outcomes |
 | reconciliation.json | Query groups, raw/scoped checkpoints, dimensions, key differences, duplicate/missing keys, and amount explanations |
@@ -103,6 +105,6 @@ Structured cells in CSV are JSON encoded. Empty difference files still contain h
 
 ## Verification and limitations
 
-The full suite has 40 passing tests. Fourteen reconciliation tests cover manual expected results, query masking, corrected equality, offsetting changes, replaced keys with equal totals, duplicate and missing keys, empty scopes, invalid amount types, parameterized/range/membership filters, invalid query definitions, execution failures, backward-compatible jobs, and CLI exit codes.
+The full suite has 51 passing tests after Step 4. Fourteen reconciliation tests cover manual expected results, query masking, corrected equality, offsetting changes, replaced keys with equal totals, duplicate and missing keys, empty scopes, invalid amount types, parameterized/range/membership filters, invalid query definitions, execution failures, backward-compatible jobs, and CLI exit codes.
 
-Records and groups are retained in memory for small demonstration batches. Filters are limited to fields available at every checkpoint. Arbitrary aggregate SQL lineage, scale benchmarks, join-match diagnosis, a human-readable evidence report, and runtime AI remain later work. Step 4 adds a dedicated join-fanout scenario and richer diagnostic evidence; Step 5 adds model analysis.
+Records and groups are retained in memory for small demonstration batches. Filters are limited to fields available at every checkpoint. Arbitrary aggregate SQL lineage, scale benchmarks, and runtime AI remain later work. Step 4 now supplies a dedicated join-fanout scenario, declared-join observations, report.md, and evidence.json; see [JOIN_DIAGNOSTICS.md](JOIN_DIAGNOSTICS.md). Step 5 adds model analysis.
