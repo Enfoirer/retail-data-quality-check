@@ -1,0 +1,13 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.env
+.env.*
+!.env.example
+.work_timer.json
+outputs/
+# Keep actual company/customer data out of the repository.
+data/private/
