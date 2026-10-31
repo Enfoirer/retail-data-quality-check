@@ -1,31 +1,31 @@
-# 第一个链路案例：过滤条件差异
+# First Pipeline Example: Filter Mismatch
 
-全部为合成数据和人工设计的 SQL，不包含雇主数据或实际事故信息。
-当前交付的是执行器的输入及预期；通用执行命令会在实施计划第 2 步提供。
+All records and SQL are synthetic. No employer data or actual incident details are included.
+This milestone delivers executor inputs and expectations; the reusable execution command will be provided in Step 2 of the implementation plan.
 
-## 先看什么
+## Reading order
 
-1. `orders.csv`：三条当前订单明细，其中 I001、I002 已支付，I003 已取消。
-2. `orders.contract.json`：原订单金额快照约定，取消订单的 1,479 元合法保留在底表。
-3. `sql/a_filter.sql` 和 `sql/b_filter.sql`：两边如何过滤同一份底表。
-4. `sql/a_enrich.sql` 和 `sql/b_enrich.sql`：按商品编号左关联同一份商品表。
-5. `job.json`：明确步骤、比较键、金额字段、维度和对应检查点。
-6. `expected.json`：手工写明的答案，用于验收，不参与未来引擎的计算。
+1. `orders.csv`: three current order-line snapshots. I001 and I002 are paid; I003 is cancelled.
+2. `orders.contract.json`: original-amount snapshot semantics, under which the cancelled order's CNY 1,479 is valid in the source.
+3. `sql/a_filter.sql` and `sql/b_filter.sql`: how the two pipelines filter the shared source.
+4. `sql/a_enrich.sql` and `sql/b_enrich.sql`: how both pipelines left-join the shared product table.
+5. `job.json`: explicit steps, comparison key, amount column, dimension, and aligned checkpoints.
+6. `expected.json`: a manually specified acceptance answer key, never an input to the future reconciliation engine.
 
-## 手工核对
+## Manual verification
 
-- 业务要求：最终都应只保留 paid，关联后保持每明细一行。
-- A 过滤后：I001 + I002 = 100 + 200 = 300 元。
-- B 过滤后：I001 + I002 + I003 = 100 + 200 + 1,479 = 1,779 元。
-- 差额方向固定为 B − A，即 +1,479 元，全部位于北京。
-- 商品表目前每个 product_id 唯一，因此后续左关联没有新增行数或金额差异。
-- 修改 B 的过滤 SQL 为 `sql/b_filter_paid.sql` 后，两边最终均为两条记录、300 元。
+- Business requirement: final results include paid lines only; enrichment preserves one row per order line.
+- Pipeline A after filtering: I001 + I002 = 100 + 200 = CNY 300.
+- Pipeline B after filtering: I001 + I002 + I003 = 100 + 200 + 1,479 = CNY 1,779.
+- Difference direction is B minus A: CNY +1,479, entirely in Beijing.
+- The product table currently has one row per product_id, so enrichment introduces no additional row or amount differences.
+- Replacing B's filter SQL with `sql/b_filter_paid.sql` makes both final results contain two records totaling CNY 300.
 
-底表三条金额直接相加的 1,779 元是原始金额合计，不应被误称为已支付销售额。
-SQL 在加载后使用整数分 `amount_cents`；CSV 的原 `amount` 保留为文本用于追溯。
-源文件与 SQL 路径均相对于 job.json 所在目录，配置的输出表名供后续步骤直接引用。
+The CNY 1,779 source total is a raw original-amount sum, not a paid-sales metric.
+After loading, SQL uses integer minor units in `amount_cents`; the original CSV amount is preserved as text for inspection.
+Source and SQL paths resolve relative to job.json. Configured output table names are available to subsequent steps.
 
-## 下一步的功能边界
+## Next milestone boundaries
 
-第一版会显式执行这些 SQL 步骤，不自动拆解任意 SQL。比较器计算事实，AI 结合事实、SQL 和业务要求解释原因。
-如果只知道多出 I003，尚不能推断业务错误；本例还提供了明确的 paid-only 业务要求与两条不同的过滤条件。
+The first version executes explicit SQL steps; it does not automatically decompose arbitrary SQL. The comparator computes facts, and AI uses those facts, SQL, and business requirements to explain possible causes.
+An extra I003 record alone does not establish a business error. This fixture additionally supplies a paid-only requirement and two different filter predicates.

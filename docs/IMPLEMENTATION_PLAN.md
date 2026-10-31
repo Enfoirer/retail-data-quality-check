@@ -1,37 +1,38 @@
-# 分步骤实施：零售 SQL 链路对账与差异定位
+# Implementation Plan: Retail SQL Reconciliation and Difference Localization
 
-每一步都留下可检查的产物和提交。现有单 CSV 校验工具继续作为可复用的基础。
-先完成确定性证据链，再加入模型分析。总投入仍须计入 case study 的四小时上限，包括讨论与人工审核；旧计时日志不代表完整总耗时。
+Each milestone produces a reviewable artifact and commit. The existing single-file CSV checker provides reusable validation capabilities.
+Build the deterministic evidence workflow before adding model analysis. Total case-study effort must remain within four hours, including discussion and applicant review; earlier timer entries do not represent all effort.
+All deliverables, including documentation, sample labels, reports, and code comments, use English.
 
-| 步骤 | 内容 | 验收结果 | 状态 |
+| Step | Scope | Acceptance criteria | Status |
 |---|---|---|---|
-| 1 | 定义共同数据、两条 SQL 链路、比较约定和人工预期 | 能手工解释为何差 1,479 元；样例 SQL 经本地验证 | 已完成 |
-| 2 | 实现任务配置校验、CSV 加载和 SQLite 分步骤执行器 | 一条命令执行两条链路，保留中间表并报告 SQL 失败步骤 | 待实现 |
-| 3 | 实现指标、明细、维度和检查点对账 | 定位 filtered 检查点、I003 和北京的 1,479 元差异；总额相同也检查明细 | 待实现 |
-| 4 | 增加关联放大困难案例、修正后重跑、证据报告 | 重复键不被覆盖；展示关联匹配次数；修正过滤条件后差异归零 | 待实现 |
-| 5 | 加入基于证据的 AI 分析 | 模型引用真实证据，区分观察/假设/建议；模型失败时仍有计算报告 | 待实现 |
-| 6 | 整理提交材料与演示 | README 可复现；四页以内说明与最终实现一致；披露时间、AI、合成数据和限制 | 待实现 |
+| 1 | Define shared data, two SQL pipelines, comparison semantics, and manual expectations | Explain the CNY 1,479 difference by hand; verify sample SQL locally | Complete |
+| 2 | Implement job validation, CSV loading, and a staged SQLite executor | Execute both pipelines with one command, retain intermediate tables, and identify failed SQL steps | Pending |
+| 3 | Implement metric, record, dimension, and checkpoint reconciliation | Identify checkpoint filtered, item I003, and Beijing's CNY 1,479 difference; inspect records even when totals match | Pending |
+| 4 | Add a join-fanout case, rerun after correction, and generate evidence reports | Preserve duplicate keys, show join-match counts, and demonstrate zero differences after correcting the filter | Pending |
+| 5 | Add evidence-based AI analysis | Cite actual evidence, distinguish observations from hypotheses and recommendations, and retain computed reports if the model fails | Pending |
+| 6 | Prepare submission artifacts and demonstration | Reproducible README; explanation of no more than four pages matching actual behavior; disclose time, AI, synthetic data, and limitations | Pending |
 
-## 第 1 步：先确定比较的含义
+## Step 1: Establish comparison semantics
 
-样例目录：`samples/reconciliation/filter_mismatch/`。
+Fixture directory: `samples/reconciliation/filter_mismatch/`.
 
-- 粒度：每行一条订单明细的当前快照，唯一键 `order_item_id`。同一订单可以有多条明细。
-- 金额：CNY 原订单金额；取消订单仍可以保留正数原金额。不能用旧版净额约定将它判为零。
-- 业务要求：两条最终链路都只包含 paid 明细，商品关联保持每明细一行。
-- 执行：同一份 orders 和 products，先过滤再左关联。对应检查点由配置显式声明。
-- 金额加载：精确解析元，转换为整数分 `amount_cents`。原始 `amount` 保留为文本；SQL 不依赖浮点金额求和。
-- 比较：金额差额统一为 **B − A**。当前只比较同粒度的明细结果。
-- 事实边界：程序能证明记录和步骤差异。判定某个过滤条件不符合需求，需要引用业务要求。
+- Grain: one current snapshot per order line, uniquely identified by `order_item_id`. An order may contain multiple lines.
+- Amount: original order amount in CNY. Cancelled orders may retain a positive original amount; the earlier net-movement convention does not apply.
+- Business requirement: both final pipelines include only paid lines, and product enrichment preserves one row per order line.
+- Execution: shared orders and products inputs, followed by filtering and a left join. The configuration explicitly aligns comparable checkpoints.
+- Money loading: parse yuan amounts exactly and convert to integer minor units in `amount_cents`. Preserve the original amount as text; SQL aggregation does not rely on floating-point money.
+- Comparison: differences consistently mean **B minus A**. The initial workflow compares results at the same order-line grain.
+- Evidence boundary: the program establishes record and step differences. Judging a filter against requirements also requires the supplied business definition.
 
-第 1 步只交付输入样例、SQL、任务描述和人工答案。SQLite 已临时执行验证这些样例；通用执行器及其命令行在第 2 步实现。
+Step 1 delivers fixture inputs, SQL, a job description, and a manual answer key. A temporary SQLite run verified these fixtures; the reusable executor and its CLI are implemented in Step 2.
 
-## 后续实现约定
+## Subsequent implementation conventions
 
-路径相对于任务 JSON 所在目录解析，执行时物化显式步骤。基础表在同一内存数据库中加载一次，供两条链路使用。
-任务 JSON 的 `schema_version: 1` 是新任务格式，与旧单表报告的 schema_version 独立。
+Resolve paths relative to the job JSON directory and materialize explicitly provided steps. Load base tables once into the same in-memory database for both pipelines.
+The job's schema_version 1 is a new configuration format, independent of the existing single-file report version.
 
-对账始终包含明细检查。首次分歧依据配置中的检查点顺序确定，不能自动解释成最终业务根因。
-重复键必须保留并输出匹配歧义；不能用字典覆盖后声称比较一致。关联诊断使用显式的 join 描述和实际结果，不声称自动解析任意 SQL。
+Always include record-level checks. Determine the first observed divergence using the declared checkpoint order; it does not automatically establish the business root cause.
+Preserve duplicate keys and report matching ambiguity. Do not overwrite duplicates in a dictionary and report equality. Join diagnostics use explicit join descriptions and observed results; arbitrary SQL parsing is outside the initial scope.
 
-AI 第一版只解释已生成的证据与所提供的 SQL/业务说明。供应商、模型及调用方式在第 5 步选择；当前没有运行时模型集成。
+The initial AI feature explains generated evidence together with supplied SQL and business requirements. Choose the provider, model, and invocation method in Step 5; no runtime model is integrated yet.
