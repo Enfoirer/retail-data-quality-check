@@ -15,7 +15,7 @@ All deliverables, including documentation, sample labels, reports, and code comm
 
 ## Step 1: Establish comparison semantics
 
-Fixture directory: `samples/reconciliation/filter_mismatch/`.
+Fixture directory: `samples/reconciliation/filter_mismatch/`. See its [manual walkthrough](../samples/reconciliation/filter_mismatch/MANUAL_WALKTHROUGH.md) for the data dictionary, arithmetic, SQL explanation, and completed Step 1 acceptance checklist.
 
 - Grain: one current snapshot per order line, uniquely identified by `order_item_id`. An order may contain multiple lines.
 - Amount: original order amount in CNY. Cancelled orders may retain a positive original amount; the earlier net-movement convention does not apply.

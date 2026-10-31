@@ -3,6 +3,8 @@
 All records and SQL are synthetic. No employer data or actual incident details are included.
 This milestone delivers executor inputs and expectations; the reusable execution command will be provided in Step 2 of the implementation plan.
 
+For the complete data dictionary, step-by-step arithmetic, and Step 1 acceptance checklist, see [MANUAL_WALKTHROUGH.md](MANUAL_WALKTHROUGH.md).
+
 ## Reading order
 
 1. `orders.csv`: three current order-line snapshots. I001 and I002 are paid; I003 is cancelled.
