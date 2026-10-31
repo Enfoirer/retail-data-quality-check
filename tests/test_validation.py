@@ -4,10 +4,12 @@ import tempfile
 import json
 import unittest
 from pathlib import Path
-from src.retail_check import COLUMNS, InputError, main, validate
+from src.retail_check import InputError, main, validate
+from src.contracts import load_contract
 from demo import run_demo
 
 ROOT = Path(__file__).resolve().parents[1]
+COLUMNS = tuple(load_contract()['required'])
 
 
 class ValidationTests(unittest.TestCase):

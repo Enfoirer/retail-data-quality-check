@@ -1,0 +1,15 @@
+{
+  "name": "synthetic-source-b-snapshots-v1",
+  "required": ["order_ref", "line_no", "sku", "sale_date", "gross", "ccy", "state"],
+  "unique_key": ["order_ref", "line_no"],
+  "amount": {"field": "gross", "decimal_places": 2},
+  "date": {"field": "sale_date", "format": "%d/%m/%Y", "review_alternate_formats": false},
+  "allowed_values": {
+    "ccy": ["USD"],
+    "state": ["paid", "cancelled", "refunded"]
+  },
+  "status_amount": {
+    "status_field": "state",
+    "rules": {"paid": "positive", "cancelled": "nonnegative", "refunded": "positive"}
+  }
+}

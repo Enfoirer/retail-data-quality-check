@@ -1,6 +1,6 @@
 # Retail Data Quality Check
 
-A working, local CSV preflight tool for retail order-line batches. It locates problems before downstream ingestion and emits a machine-readable report. All samples are synthetic. No JD data, code, credentials, or integrations are used.
+A working, local CSV preflight tool driven by source-specific JSON data contracts. It locates problems before downstream ingestion and emits a machine-readable report. All samples are synthetic. No JD data, code, credentials, or integrations are used.
 
 ## Setup and run
 
@@ -8,6 +8,7 @@ Python 3.10+; standard library only. Developed and tested on Python 3.13.7. No i
 
 ```sh
 python3 demo.py
+python3 src/retail_check.py samples/source-b.csv --config configs/source-b-snapshots.json --output outputs/source-b.json
 python3 src/retail_check.py samples/clean.csv --output outputs/clean.json
 python3 src/retail_check.py samples/typical-errors.csv --output outputs/errors.json
 python3 src/retail_check.py samples/difficult-case.csv --output outputs/difficult.json
@@ -16,6 +17,33 @@ python3 -m unittest discover -s tests -v
 ```
 
 The last three sample commands intentionally return nonzero exit codes. Exit codes: **0** PASS, **1** BLOCK or REVIEW, **2** invalid input/output or unreadable file. Existing report files are replaced; the input CSV cannot be the report destination. Reports contain source values in messages such as invalid status; handle reports according to your data policy.
+
+## Configure a data source
+
+`--config` selects a JSON contract. The default is `configs/retail-order-lines.json`; existing commands still work. `configs/source-b-snapshots.json` demonstrates different column names, a composite `(order_ref, line_no)` key, day/month dates, USD, and positive original amounts retained on refunded snapshots. With its matching config, `samples/source-b.csv` passes without editing Python.
+
+A minimal contract is:
+
+```json
+{
+  "name": "example-v1",
+  "required": ["order_id", "line_no", "amount"],
+  "unique_key": ["order_id", "line_no"]
+}
+```
+
+Required fields and uniqueness are checked even in a minimal contract. Additional optional rule groups:
+
+| JSON key | Purpose |
+|---|---|
+| `amount` | `field` and `decimal_places` (integer 0–6); strict decimal parsing |
+| `date` | `field`, `format`, optional `review_alternate_formats` boolean |
+| `allowed_values` | Mapping from column names to nonempty lists of accepted strings |
+| `status_amount` | `status_field` and a `rules` mapping from every allowed status to a sign rule |
+
+All rule fields must appear in `required`. Supported date formats: `%Y-%m-%d`, `%d/%m/%Y`, `%m/%d/%Y`; alternate-format review can be enabled for the ISO default. The CLI date-format override takes precedence and is recorded separately. Status/amount checks require an amount rule and exact coverage of the status enumeration. Sign rules are `positive`, `negative`, `zero`, `nonnegative`, `nonpositive`, and `any` (explicitly no sign restriction).
+
+Contracts are checked before CSV processing. Unknown options, malformed JSON, duplicate JSON keys, unsupported rule values, unknown referenced fields, and incomplete status mappings return CONFIG ERROR (exit 2). No expressions or Python code are evaluated. Valid syntax does not establish correct business meaning: a person must confirm the contract. JSON reports use `schema_version: 2` and embed the loaded contract plus any date-format override for inspection.
 
 ## End-to-end investigation example
 
@@ -39,7 +67,7 @@ The example uses all-paid CNY records under a one-current-snapshot-per-item cont
 
 Each finding includes the logical CSV record number (header is record 1), field, rule code, severity, explanation, and next action. This is not a physical line number when quoted fields contain newlines. Error/review totals count findings, not affected records. BLOCK means at least one rule error; REVIEW means only unresolved format questions; PASS means no implemented rule fired, not a guarantee of business correctness.
 
-## Schema and explicit assumptions
+## Default contract and explicit assumptions
 
 Required, nonempty columns:
 
@@ -48,7 +76,7 @@ Required, nonempty columns:
 - `product_id`: required; existence in a real catalog is not checked.
 - `order_date`: strict `YYYY-MM-DD` by default. For a documented source convention, pass `--date-format '%d/%m/%Y'` or `--date-format '%m/%d/%Y'`. One convention applies to the entire file; mixed formats must be resolved upstream.
 - `amount`: decimal without currency symbols or grouping separators, at most two fractional digits; parsed with Decimal.
-- `currency`: CNY only for this prototype.
+- `currency`: CNY in the default contract; other sources can declare a different enumeration.
 - `status`: `paid`, `cancelled`, or `refunded`.
 
 **Synthetic business convention:** each row represents a current net-movement amount: paid > 0, cancelled = 0, refunded < 0. Real systems may retain original positive amounts on cancelled/refunded orders, or store refunds separately. Confirm semantics before adapting these rules. Partial refunds and repeated lifecycle events are outside this schema.
@@ -65,13 +93,15 @@ Extra columns are allowed and ignored. UTF-8 (including BOM) is supported. Missi
 
 ## Implementation and limits
 
-Implemented: CLI, seven-field schema, deterministic checks, human-readable findings, JSON export, exit codes, synthetic samples, a human-resolution demonstration, and automated checks. No mocked external API is involved; sample data alone is synthetic. Deferred: graphical UI, warehouse integration, catalog lookups, cross-batch duplicate detection, configurable business rules, automatic repair, and large-file benchmarks. Duplicate detection uses memory proportional to distinct IDs; findings are also retained in memory. Intended for small demonstration batches.
+Implemented: CLI, validated JSON contracts, source-specific field names and composite keys, deterministic checks, human-readable findings, JSON export, exit codes, synthetic samples, a human-resolution demonstration, and automated checks. No mocked external API is involved; sample data alone is synthetic. Deferred: graphical UI, warehouse integration, catalog lookups, cross-batch duplicate detection, automatic repair, and large-file benchmarks. Adding new rule types still requires Python changes; configuration supports the documented checks, not arbitrary business expressions. Duplicate detection uses memory proportional to distinct IDs; findings are also retained in memory. Intended for small demonstration batches.
 
 See `docs/CASE_STUDY.md` for the working submission draft and decisions. It still needs applicant review of the experience wording, current-workflow details, and final time declaration.
 
+See `docs/AI_EXTENSION.md` for proposed AI features; no model or AI-generated business rules run in this prototype.
+
 ## Time and AI disclosure
 
-Codex assisted with ideation, code, synthetic samples, tests, and documentation. Checks include hand-specified expected findings and eight automated tests; these were also AI-assisted and are not independent evidence of real-world usefulness. No prior project code was reused.
+Codex assisted with ideation, code, synthetic samples, tests, and documentation. Checks include hand-specified expected findings and fourteen automated tests; these were also AI-assisted and are not independent evidence of real-world usefulness. No prior project code was reused.
 
 ```sh
 python3 scripts/work_timer.py start "Describe work"

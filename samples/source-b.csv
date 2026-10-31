@@ -1,0 +1,5 @@
+order_ref,line_no,sku,sale_date,gross,ccy,state
+B001,1,SKU01,03/04/2026,100.00,USD,paid
+B001,2,SKU02,03/04/2026,25.50,USD,paid
+B002,1,SKU01,04/04/2026,50.00,USD,refunded
+B003,1,SKU03,04/04/2026,20.00,USD,cancelled
