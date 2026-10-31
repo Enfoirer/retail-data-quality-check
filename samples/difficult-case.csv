@@ -1,4 +1,0 @@
-order_item_id,order_id,product_id,order_date,amount,currency,status
-I001,O001,P01,03/04/2026,100.00,CNY,paid
-I001,O001,P01,2026-04-03,120.00,CNY,paid
-I003,O002,P02,2026-10-02,"1,234.50",CNY,paid

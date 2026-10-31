@@ -17,6 +17,11 @@ class PackagingTests(unittest.TestCase):
             destination = Path(temporary) / 'source.zip'
             package(root, destination)
             with zipfile.ZipFile(destination) as archive:
+                names = set(archive.namelist())
+                self.assertIn('retail-sql-reconciliation/src/source_preflight.py', names)
+                self.assertNotIn('retail-sql-reconciliation/src/retail_check.py', names)
+                self.assertNotIn('retail-sql-reconciliation/demo.py', names)
+                self.assertFalse(any(name.startswith('retail-sql-reconciliation/configs/') for name in names))
                 archive.extractall(Path(temporary) / 'extracted')
             extracted = Path(temporary) / 'extracted/retail-sql-reconciliation'
             env = os.environ.copy()

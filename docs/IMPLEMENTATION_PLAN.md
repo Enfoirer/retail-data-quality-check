@@ -1,6 +1,6 @@
 # Implementation Plan: Retail SQL Reconciliation and Difference Localization
 
-Each milestone produces a reviewable artifact and commit. The existing single-file CSV checker provides reusable validation capabilities.
+Each milestone produces a reviewable artifact and commit. The SQL source loader uses internal preflight validation with explicit source contracts.
 Build the deterministic evidence workflow before adding model analysis. Total case-study effort must remain within four hours, including discussion and applicant review; earlier timer entries do not represent all effort.
 All deliverables, including documentation, sample labels, reports, and code comments, use English.
 
@@ -53,9 +53,15 @@ The adapter sends a checked projection of requirements, SQL, and computed eviden
 
 ## Step 6: Prepare and verify the submission
 
-The primary README now describes the final reconciliation workflow. CASE_STUDY.md renders to the included four-page PDF, and DEMO.md provides a 15-minute walkthrough. The runnable demo covers filter and join corrections, a scoped MATCH over unequal raw datasets, and a deliberately failed B/filter step. The earlier preflight checker remains a supporting component; its detailed instructions moved to PREFLIGHT.md. The obsolete AI-extension design note was removed.
+The primary README now describes the final reconciliation workflow. CASE_STUDY.md renders to the included four-page PDF, and DEMO.md provides a 15-minute walkthrough. The runnable demo covers filter and join corrections, a scoped MATCH over unequal raw datasets, and a deliberately failed B/filter step. Source preflight is an internal component documented in PREFLIGHT.md. The old standalone CSV entry point, default configurations, and independent sample files were removed after dependency review. The obsolete AI-extension design note was removed.
 
-An explicit 80-file manifest builds a hashed source ZIP and excludes applicant working notes, credentials, Git internals, caches, and generated runs. Clean extraction exposed an omitted prompt resource, which was added to the manifest and covered by a regression test. The final 71-test suite and all demonstration cases passed from an extracted package without site-packages or API credentials. Three packaging tests cover exclusion, unsafe paths, and required AI resources. TIME_DISCLOSURE.md separates timer records from the applicant's approximately 30 minutes of review and does not invent earlier discussion time.
+An explicit 69-file manifest builds a hashed source ZIP and excludes applicant working notes, credentials, Git internals, caches, and generated runs. Clean extraction exposed an omitted prompt resource, which was added to the manifest and covered by a regression test. The final 71-test suite and all demonstration cases passed from an extracted package without site-packages or API credentials. Three packaging tests cover exclusion, unsafe paths, and required AI resources. TIME_DISCLOSURE.md separates timer records from the applicant's approximately 30 minutes of review and does not invent earlier discussion time.
+
+## Cleanup after submission preparation
+
+Dependency review removed the independent CSV demo, root default configurations, and flat CSV sample collection. Source validation is now an internal source_preflight.py component requiring the job's explicit contract; it has no standalone CLI or implicit business defaults. Contract and preflight tests use reconciliation snapshots or temporary invalid inputs. The submission now selects 69 files and exposes one demo entry point.
+
+All 71 tests pass. Six before/after, scoped-query, and failed-SQL runs retain identical comparison/diagnostic results. The three current model evidence packets are identical to the packets saved from actual Step 5 calls, so no additional model calls were needed for this refactor.
 
 ## Subsequent implementation conventions
 

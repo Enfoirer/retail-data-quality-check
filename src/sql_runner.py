@@ -11,11 +11,11 @@ from pathlib import Path
 if __package__:
     from .contracts import ConfigError
     from .job_config import JobError, identifier, load_job
-    from .retail_check import InputError, validate
+    from .source_preflight import InputError, validate
 else:
     from contracts import ConfigError
     from job_config import JobError, identifier, load_job
-    from retail_check import InputError, validate
+    from source_preflight import InputError, validate
 
 
 class ExecutionError(ValueError):

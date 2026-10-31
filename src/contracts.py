@@ -2,7 +2,6 @@
 import json
 from pathlib import Path
 
-DEFAULT_CONFIG = Path(__file__).resolve().parents[1] / 'configs/retail-order-lines.json'
 DATE_FORMATS = ('%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y')
 SIGN_RULES = {'positive', 'negative', 'zero', 'nonnegative', 'nonpositive', 'any'}
 
@@ -99,7 +98,7 @@ def _unique_pairs(pairs):
     return obj
 
 
-def load_contract(path=DEFAULT_CONFIG):
+def load_contract(path):
     try:
         text = Path(path).read_text(encoding='utf-8-sig')
         config = json.loads(text, object_pairs_hook=_unique_pairs)

@@ -1,18 +1,15 @@
-"""CSV preflight driven by a validated JSON contract; standard library only."""
-import argparse
+"""Read-only source preflight for SQL jobs using an explicitly supplied contract."""
 import csv
-import json
 import re
-import sys
 from collections import Counter
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 if __package__:
-    from .contracts import ConfigError, DATE_FORMATS, DEFAULT_CONFIG, load_contract
+    from .contracts import DATE_FORMATS, load_contract
 else:
-    from contracts import ConfigError, DATE_FORMATS, DEFAULT_CONFIG, load_contract
+    from contracts import DATE_FORMATS, load_contract
 
 
 class InputError(ValueError):
@@ -24,35 +21,30 @@ def sign_matches(amount, rule):
             'nonnegative': amount >= 0, 'nonpositive': amount <= 0, 'any': True}[rule]
 
 
-def check_date(text, rule, explicit_format=None):
-    fmt = explicit_format or rule['format']
+def check_date(text, rule):
+    fmt = rule['format']
     try:
         parsed = datetime.strptime(text, fmt)
         if parsed.strftime(fmt) != text:
             raise ValueError
         return None
     except ValueError:
-        if (not explicit_format and rule.get('review_alternate_formats', False)
+        if (rule.get('review_alternate_formats', False)
                 and re.fullmatch(r'[0-9]{2}/[0-9]{2}/[0-9]{4}', text)):
             for candidate in DATE_FORMATS[1:]:
                 try:
                     datetime.strptime(text, candidate)
                     return ('date_format_review', 'review',
                             'Non-ISO date; day/month interpretation is not declared.',
-                            'Confirm source convention and change the contract or use --date-format.')
+                            'Confirm source convention and declare its date format in the contract.')
                 except ValueError:
                     pass
         return ('invalid_date', 'error', f'Expected a real date in {fmt} format.',
                 'Correct the source date or declare its documented format.')
 
 
-def validate(path, date_format=None, config_path=DEFAULT_CONFIG):
+def validate(path, config_path):
     contract = load_contract(config_path)
-    if date_format is not None:
-        if date_format not in DATE_FORMATS:
-            raise ConfigError('Unsupported date format override.')
-        if 'date' not in contract:
-            raise ConfigError('--date-format requires a date rule in the contract.')
     findings = []
     required = contract['required']
     unique_key = contract['unique_key']
@@ -120,7 +112,7 @@ def validate(path, date_format=None, config_path=DEFAULT_CONFIG):
                         'Confirm source semantics before changing data or the status/amount rule.')
             if 'date' in contract and values[contract['date']['field']]:
                 field = contract['date']['field']
-                issue = check_date(values[field], contract['date'], date_format)
+                issue = check_date(values[field], contract['date'])
                 if issue:
                     code, severity, message, suggestion = issue
                     add(row, field, code, message, suggestion, severity)
@@ -128,42 +120,6 @@ def validate(path, date_format=None, config_path=DEFAULT_CONFIG):
             raise InputError('Header-only file: no data records to validate.')
     counts = Counter(f['severity'] for f in findings)
     return {'schema_version': 2, 'input': str(path), 'contract': contract,
-            'date_format_override': date_format, 'records': count,
+            'records': count,
             'decision': 'BLOCK' if counts['error'] else ('REVIEW' if counts['review'] else 'PASS'),
             'errors': counts['error'], 'reviews': counts['review'], 'findings': findings}
-
-
-def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('csv_file', type=Path)
-    parser.add_argument('--config', type=Path, default=DEFAULT_CONFIG, help='JSON data contract.')
-    parser.add_argument('--date-format', choices=DATE_FORMATS)
-    parser.add_argument('--output', type=Path, help='Write complete JSON report.')
-    args = parser.parse_args(argv)
-    if args.output and args.output.resolve() in (args.csv_file.resolve(), args.config.resolve()):
-        print('OUTPUT ERROR: report must not overwrite the input CSV or contract.', file=sys.stderr)
-        return 2
-    try:
-        report = validate(args.csv_file, args.date_format, args.config)
-    except ConfigError as error:
-        print(f'CONFIG ERROR: {error}', file=sys.stderr)
-        return 2
-    except (OSError, UnicodeError, csv.Error, InputError) as error:
-        print(f'INPUT ERROR: {error}', file=sys.stderr)
-        return 2
-    print(f"Contract: {report['contract']['name']}")
-    print(f"{report['decision']}: {report['records']} records; {report['errors']} errors; {report['reviews']} reviews")
-    for finding in report['findings']:
-        print(f"  record {finding['row']} [{finding['severity']}] {finding['field']}: {finding['code']} — {finding['message']}")
-    if args.output:
-        try:
-            args.output.parent.mkdir(parents=True, exist_ok=True)
-            args.output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
-        except OSError as error:
-            print(f'OUTPUT ERROR: {error}', file=sys.stderr)
-            return 2
-    return 0 if report['decision'] == 'PASS' else 1
-
-
-if __name__ == '__main__':
-    sys.exit(main())

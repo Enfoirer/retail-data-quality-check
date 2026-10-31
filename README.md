@@ -49,7 +49,7 @@ Nonzero exits above are expected findings, not failed setup. MATCH means configu
 
 JSON job + shared CSV snapshots + staged SQL -> retained SQLite tables -> query/detail/checkpoint comparisons -> declared-join diagnostics -> evidence reports -> optional AI interpretation.
 
-The job declares keys, integer-cent amount semantics, dimensions, aligned checkpoints, common filters/grouping, and optional join expectations. Source preflight reuses the configurable checker from this same exercise. Original amount text is retained; exact parsing produces integer cents, and comparison aggregation uses Python integers. Differences mean **B minus A**. SQL fixtures use original CNY order amounts; a cancelled snapshot may retain a positive amount.
+The job declares keys, integer-cent amount semantics, dimensions, aligned checkpoints, common filters/grouping, and optional join expectations. The SQL loader calls src/source_preflight.py using the explicit source contract declared by the job. All runnable examples belong to the reconciliation workflow. Original amount text is retained; exact parsing produces integer cents, and comparison aggregation uses Python integers. Differences mean **B minus A**. SQL fixtures use original CNY order amounts; a cancelled snapshot may retain a positive amount.
 
 | Per-run artifact | Purpose |
 |---|---|
@@ -89,6 +89,6 @@ The PDF is already included. To rebuild it, separately install requirements-docs
 
 This is an inspectable local workflow for small datasets. Explicit checkpoint alignment, a common detail grain/currency, and supplied business definitions are assumptions. General SQL decomposition, warehouse/catalog adapters, a UI, automatic repair, AI contract drafting, and large-data performance are deferred. Existing warehouse checks may be the better production solution; usefulness and review-time savings are unmeasured.
 
-Codex assisted with planning, implementation, synthetic fixtures, tests, documentation, and review. No prior project code was reused; preflight code was built earlier within this exercise. Optional runtime AI is separate from development assistance. See the [time disclosure](docs/TIME_DISCLOSURE.md) for measured sessions and the applicant's approximately 30 minutes of review, with unrecorded discussion explicitly acknowledged.
+Codex assisted with planning, implementation, synthetic fixtures, tests, documentation, and review. No prior project code was reused; source preflight adapts validation code built earlier within this exercise. Optional runtime AI is separate from development assistance. See the [time disclosure](docs/TIME_DISCLOSURE.md) for measured sessions and the applicant's approximately 30 minutes of review, with unrecorded discussion explicitly acknowledged.
 
 Technical references: [query semantics](docs/RECONCILIATION.md), [executor](docs/SQL_EXECUTOR.md), [join diagnostics](docs/JOIN_DIAGNOSTICS.md), and [supporting preflight contracts](docs/PREFLIGHT.md).
