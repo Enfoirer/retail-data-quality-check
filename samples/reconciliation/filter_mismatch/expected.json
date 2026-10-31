@@ -2,34 +2,89 @@
   "note": "Hand-specified synthetic answer key. The reconciliation engine must compute its results independently and must not load this file.",
   "difference_direction": "B_minus_A",
   "sources": {
-    "orders": {"rows": 3, "amount_sum_cents": 177900},
-    "products": {"rows": 3}
+    "orders": {
+      "rows": 3,
+      "amount_sum_cents": 177900
+    },
+    "products": {
+      "rows": 3
+    }
   },
   "checkpoints": [
     {
       "name": "filtered",
-      "A": {"rows": 2, "unique_keys": 2, "amount_sum_cents": 30000},
-      "B": {"rows": 3, "unique_keys": 3, "amount_sum_cents": 177900},
+      "A": {
+        "rows": 2,
+        "unique_keys": 2,
+        "amount_sum_cents": 30000
+      },
+      "B": {
+        "rows": 3,
+        "unique_keys": 3,
+        "amount_sum_cents": 177900
+      },
       "difference_cents": 147900,
       "only_in_a_keys": [],
-      "only_in_b_keys": [["I003"]],
+      "only_in_b_keys": [
+        [
+          "I003"
+        ]
+      ],
       "value_mismatch_keys": []
     },
     {
       "name": "enriched",
-      "A": {"rows": 2, "unique_keys": 2, "amount_sum_cents": 30000},
-      "B": {"rows": 3, "unique_keys": 3, "amount_sum_cents": 177900},
+      "A": {
+        "rows": 2,
+        "unique_keys": 2,
+        "amount_sum_cents": 30000
+      },
+      "B": {
+        "rows": 3,
+        "unique_keys": 3,
+        "amount_sum_cents": 177900
+      },
       "difference_cents": 147900,
       "only_in_a_keys": [],
-      "only_in_b_keys": [["I003"]],
+      "only_in_b_keys": [
+        [
+          "I003"
+        ]
+      ],
       "value_mismatch_keys": []
     }
   ],
   "first_divergent_checkpoint": "filtered",
-  "final_province_differences_cents": {"Beijing": 147900, "Shanghai": 0},
+  "final_province_differences_cents": {
+    "Beijing": 147900,
+    "Shanghai": 0
+  },
   "after_fix": {
-    "A_rows": 2, "B_rows": 2,
-    "A_amount_sum_cents": 30000, "B_amount_sum_cents": 30000,
-    "difference_cents": 0, "record_differences": 0
+    "A_rows": 2,
+    "B_rows": 2,
+    "A_amount_sum_cents": 30000,
+    "B_amount_sum_cents": 30000,
+    "difference_cents": 0,
+    "record_differences": 0
+  },
+  "query": {
+    "filters": [
+      {
+        "column": "order_date",
+        "operator": "eq",
+        "value": "2026-10-01"
+      }
+    ],
+    "group_by": [
+      "province"
+    ],
+    "result_status": "DIFFERENT",
+    "first_query_scope_divergence": "filtered",
+    "paid_only_variant": {
+      "query_result_status": "MATCH",
+      "detail_status": "MATCH",
+      "first_raw_divergence": "filtered",
+      "first_query_scope_divergence": null
+    }
   }
 }

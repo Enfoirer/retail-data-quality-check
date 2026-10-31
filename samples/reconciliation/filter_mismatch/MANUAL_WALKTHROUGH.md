@@ -1,6 +1,6 @@
 # Step 1 Acceptance: Data, Contracts, and Manual Reconciliation
 
-This walkthrough is an expected result for synthetic fixtures. It is not an automatically generated diagnostic report, and the future engine must compute its own results without reading expected.json.
+This walkthrough is an expected result for synthetic fixtures. It is not an automatically generated diagnostic report, and the engine computes its own results without reading expected.json.
 
 ## 1. Shared inputs and data dictionary
 
@@ -99,6 +99,14 @@ Observed fact: B retains I003 at the filter step while A excludes it. SQL eviden
 Change B's filter reference to sql/b_filter_paid.sql and rerun both stages. Both final datasets should then contain I001 and I002, total CNY 300.00, and have no record or amount differences.
 
 Without the paid-only requirement, different populations would be an observed discrepancy requiring clarification, not proof that B is wrong. This fixture establishes a controlled example, not an automated root-cause guarantee for arbitrary pipelines.
+
+## 7. Extend the example to a user request
+
+The default job now includes a common date filter for 2026-10-01 and groups by province. All three source records fall on that date, so the earlier manual totals and Beijing discrepancy remain unchanged.
+
+The job-paid-query.json variant adds status = paid to the user request, after dataset processing. B's raw dataset still contains I003. However, the query excludes it: both sides now contain I001 and I002, total CNY 300, and have equal grouped results. The raw first divergence remains filtered, while the first query-scope divergence is absent.
+
+This illustrates why dataset equality and a particular query's equality must be reported separately. Query filtering does not repair B's dataset or establish correctness for other requests.
 
 ## Step 1 checklist
 

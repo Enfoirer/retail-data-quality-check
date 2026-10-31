@@ -7,7 +7,7 @@ The reusable Step 2 executor is available. From the repository root, run:
 python3 -m src.sql_runner samples/reconciliation/filter_mismatch/job.json
 ```
 
-It retains both sources and all four stages in run.sqlite, with execution metadata in execution.json. See [the executor guide](../../../docs/SQL_EXECUTOR.md) for inspection commands and failure behavior. Computed reconciliation and AI analysis remain later milestones.
+It retains both sources and all four stages in run.sqlite, with execution metadata in execution.json. See [the executor guide](../../../docs/SQL_EXECUTOR.md) for inspection commands and failure behavior. Query-aware reconciliation is now available in Step 3; runtime AI remains a later milestone.
 
 For the complete data dictionary, step-by-step arithmetic, and Step 1 acceptance checklist, see [MANUAL_WALKTHROUGH.md](MANUAL_WALKTHROUGH.md).
 
@@ -19,6 +19,15 @@ For the complete data dictionary, step-by-step arithmetic, and Step 1 acceptance
 4. `sql/a_enrich.sql` and `sql/b_enrich.sql`: how both pipelines left-join the shared product table.
 5. `job.json`: explicit steps, comparison key, amount column, dimension, and aligned checkpoints.
 6. `expected.json`: a manually specified acceptance answer key, never an input to the future reconciliation engine.
+
+## Query-aware reconciliation
+
+```sh
+python3 -m src.reconcile samples/reconciliation/filter_mismatch/job.json
+python3 -m src.reconcile samples/reconciliation/filter_mismatch/job-paid-query.json
+```
+
+The default job filters the reporting date and groups by province. It exposes the extra I003 item and exits 1. The paid-query variant adds status = paid at query time, leaving raw dataset differences visible but producing equal query results and scoped details; it exits 0. Both use the same source files and pipeline SQL. See [the reconciliation guide](../../../docs/RECONCILIATION.md).
 
 ## Manual verification
 

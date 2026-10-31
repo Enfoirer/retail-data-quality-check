@@ -8,7 +8,7 @@ All deliverables, including documentation, sample labels, reports, and code comm
 |---|---|---|---|
 | 1 | Define shared data, two SQL pipelines, comparison semantics, and manual expectations | Explain the CNY 1,479 difference by hand; verify sample SQL locally | Complete |
 | 2 | Implement job validation, CSV loading, and a staged SQLite executor | Execute both pipelines with one command, retain intermediate tables, and identify failed SQL steps | Complete |
-| 3 | Implement metric, record, dimension, and checkpoint reconciliation | Identify checkpoint filtered, item I003, and Beijing's CNY 1,479 difference; inspect records even when totals match | Pending |
+| 3 | Implement query-aware metric, record, dimension, and checkpoint reconciliation | Identify filtered, I003, and Beijing's CNY 1,479 difference; distinguish dataset differences from query differences; inspect records even when totals match | Complete |
 | 4 | Add a join-fanout case, rerun after correction, and generate evidence reports | Preserve duplicate keys, show join-match counts, and demonstrate zero differences after correcting the filter | Pending |
 | 5 | Add evidence-based AI analysis | Cite actual evidence, distinguish observations from hypotheses and recommendations, and retain computed reports if the model fails | Pending |
 | 6 | Prepare submission artifacts and demonstration | Reproducible README; explanation of no more than four pages matching actual behavior; disclose time, AI, synthetic data, and limitations | Pending |
@@ -31,7 +31,13 @@ Step 1 delivers fixture inputs, SQL, a job description, and a manual answer key.
 
 Run `python3 -m src.sql_runner samples/reconciliation/filter_mismatch/job.json` from the repository root. See [SQL_EXECUTOR.md](SQL_EXECUTOR.md) for artifacts, inspection commands, and failure behavior.
 
-The executor validates the job, loads shared sources, materializes each stage, and retains run.sqlite plus execution.json in a new run directory. Twelve executor tests cover retained stages, independent answer keys, exact money, invalid jobs and inputs, checkpoint columns, query failures, cross-pipeline reads, source preservation, and output-directory protection. The full suite contains 26 passing tests. Step 3 reconciliation and Step 5 AI are still pending.
+The executor validates the job, loads shared sources, materializes each stage, and retains run.sqlite plus execution.json in a new run directory. Twelve executor tests cover retained stages, independent answer keys, exact money, invalid jobs and inputs, checkpoint columns, query failures, cross-pipeline reads, source preservation, and output-directory protection. With Step 3, the full suite now contains 40 passing tests; runtime AI remains pending.
+
+## Step 3: Reconcile the user request and trace differences
+
+Run `python3 -m src.reconcile samples/reconciliation/filter_mismatch/job.json`. See [RECONCILIATION.md](RECONCILIATION.md) for query configuration, status meanings, CSV outputs, and limits.
+
+The common query supports explicit filters and grouping over retained detail outputs. The engine reports grouped results separately from record equality, tracks raw and query-scoped checkpoint differences, preserves ambiguous keys, and explains unique-key amount differences. A paid-only query variant demonstrates that dataset differences may not affect a particular request. Fourteen new tests cover these behaviors and invalid/error cases.
 
 ## Subsequent implementation conventions
 

@@ -30,7 +30,7 @@ B/enrich -> b_enriched: 3 rows
 EXECUTION SUCCESS: both pipelines ran; reconciliation is not evaluated.
 ```
 
-The command prints the actual database and report paths. Exit code 0 means execution succeeded. Exit code 2 means configuration, input, SQL, or artifact creation failed. A successful run does not establish that the two results agree or meet business requirements; reconciliation is Step 3.
+The command prints the actual database and report paths. Exit code 0 means execution succeeded. Exit code 2 means configuration, input, SQL, or artifact creation failed. A successful run does not establish that the two results agree or meet business requirements. Use the [Step 3 reconciliation command](RECONCILIATION.md) to compare a common filtered/grouped request and its underlying details.
 
 ## Retained artifacts
 
@@ -52,8 +52,9 @@ After running with --output-dir outputs/step2-run:
 ```sh
 python3 - <<'PY'
 import sqlite3
+from contextlib import closing
 
-with sqlite3.connect('file:outputs/step2-run/run.sqlite?mode=ro', uri=True) as db:
+with closing(sqlite3.connect('file:outputs/step2-run/run.sqlite?mode=ro', uri=True)) as db:
     for table in ('a_filtered', 'b_filtered', 'a_enriched', 'b_enriched'):
         rows = db.execute(
             f'SELECT order_item_id, status, amount_cents FROM {table} ORDER BY order_item_id'
@@ -94,4 +95,4 @@ python3 -m unittest discover -s tests -p test_sql_runner.py -v
 - Materialize one query per SQL file. Statements that mutate sources and multi-statement SQL scripts are not accepted by the CREATE TABLE AS execution interface.
 - Verify that materialized checkpoint outputs contain the configured comparison columns.
 
-The job's join declaration is retained as evidence for later join diagnostics; this milestone does not verify cardinality or infer whether a join is correct. Output values and metrics are not yet reconciled. Large datasets, arbitrary SQL decomposition, runtime AI, and automatic SQL repair remain outside Step 2.
+The job's join declaration is retained as evidence for later join diagnostics; this milestone does not verify cardinality or infer whether a join is correct. The execution-only command does not reconcile output values or metrics; the separate Step 3 command does. Large datasets, arbitrary SQL decomposition, runtime AI, and automatic SQL repair remain outside Step 2.

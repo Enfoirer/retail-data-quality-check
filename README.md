@@ -4,13 +4,16 @@ A working, local CSV preflight tool driven by source-specific JSON data contract
 
 ## SQL reconciliation work in progress
 
-The next workflow compares two explicit SQL pipelines over shared source snapshots. Steps 1 and 2 are complete: synthetic inputs and a manual answer key are available, and a staged executor retains source and intermediate tables in SQLite. Run:
+The SQL workflow now executes two pipelines over shared source snapshots and reconciles a common filtered/grouped user request. Steps 1–3 are complete. Run:
 
 ```sh
-python3 -m src.sql_runner samples/reconciliation/filter_mismatch/job.json
+python3 -m src.reconcile samples/reconciliation/filter_mismatch/job.json
+python3 -m src.reconcile samples/reconciliation/filter_mismatch/job-paid-query.json
 ```
 
-See [docs/SQL_EXECUTOR.md](docs/SQL_EXECUTOR.md) for execution artifacts and failure diagnostics, and [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for the remaining milestones. Reconciliation and runtime AI are not implemented yet. The commands below run the existing single-file checker.
+The first command intentionally exits 1: B retains an additional cancelled item worth CNY 1,479. The second exits 0: a paid-only user query excludes that item, so scoped details and query results agree while raw dataset differences remain visible. Each run creates a new output directory with retained SQLite tables, execution metadata, reconciliation.json, and difference CSV files.
+
+See [docs/RECONCILIATION.md](docs/RECONCILIATION.md) for query semantics and [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for remaining milestones. The execution-only command remains `python3 -m src.sql_runner samples/reconciliation/filter_mismatch/job.json`; its SUCCESS status does not mean reconciliation passed. Dedicated join diagnostics, richer evidence reports, and runtime AI are pending. The commands below run the earlier single-file checker.
 
 ## Setup and run
 
@@ -103,7 +106,7 @@ Extra columns are allowed and ignored. UTF-8 (including BOM) is supported. Missi
 
 ## Implementation and limits
 
-Implemented: single-file CLI, staged SQL executor with retained SQLite tables and execution logs, validated JSON contracts, source-specific field names and composite keys, deterministic checks, human-readable findings, JSON export, exit codes, synthetic samples, a human-resolution demonstration, and automated checks. No mocked external API is involved; sample data alone is synthetic. Deferred: graphical UI, warehouse integration, catalog lookups, cross-batch duplicate detection, automatic repair, and large-file benchmarks. Adding new rule types still requires Python changes; configuration supports the documented checks, not arbitrary business expressions. Duplicate detection uses memory proportional to distinct IDs; findings are also retained in memory. Intended for small demonstration batches.
+Implemented: query-aware reconciliation with JSON/CSV differences, single-file CLI, staged SQL executor with retained SQLite tables and execution logs, validated JSON contracts, source-specific field names and composite keys, deterministic checks, human-readable findings, JSON export, exit codes, synthetic samples, a human-resolution demonstration, and automated checks. No mocked external API is involved; sample data alone is synthetic. Deferred: graphical UI, warehouse integration, catalog lookups, cross-batch duplicate detection, automatic repair, and large-file benchmarks. Adding new rule types still requires Python changes; configuration supports the documented checks, not arbitrary business expressions. Duplicate detection uses memory proportional to distinct IDs; findings are also retained in memory. Intended for small demonstration batches.
 
 See `docs/CASE_STUDY.md` for the working submission draft and decisions. It still needs applicant review of the experience wording, current-workflow details, and final time declaration.
 
@@ -111,7 +114,7 @@ See `docs/AI_EXTENSION.md` for proposed AI features; no model or AI-generated bu
 
 ## Time and AI disclosure
 
-Codex assisted with ideation, code, synthetic samples, tests, and documentation. Checks include hand-specified expected findings and 26 automated tests; these were also AI-assisted and are not independent evidence of real-world usefulness. No prior project code was reused.
+Codex assisted with ideation, code, synthetic samples, tests, and documentation. Checks include hand-specified expected findings and 40 automated tests; these were also AI-assisted and are not independent evidence of real-world usefulness. No prior project code was reused.
 
 ```sh
 python3 scripts/work_timer.py start "Describe work"

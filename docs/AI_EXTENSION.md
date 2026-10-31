@@ -2,7 +2,11 @@
 
 Status: none of these model features is implemented. The current checker runs locally and deterministically. Codex assistance during development is disclosed separately from runtime AI.
 
-## Preferred first experiment: draft a data contract from a supplied specification
+## Selected milestone: evidence-based reconciliation analysis
+
+The current implementation plan selects an investigation assistant for Step 5. It will receive computed query and checkpoint differences, SQL, and the supplied business requirement, then cite evidence while separating observations, hypotheses, and verification steps. Contract drafting remains an alternative experiment below. No runtime model feature is implemented yet.
+
+## Alternative experiment: draft a data contract from a supplied specification
 
 Input: a short source description, CSV headers, and synthetic example rows. For example: "Each order may contain multiple lines. Use order_ref + line_no as the key. Dates are DD/MM/YYYY. USD only. Refunded snapshots retain their positive original gross amount."
 

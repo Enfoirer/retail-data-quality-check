@@ -1,4 +1,5 @@
 import contextlib
+from contextlib import closing
 import io
 import json
 import shutil
@@ -36,7 +37,7 @@ class SqlRunnerTests(unittest.TestCase):
         self.assertEqual([step['rows'] for step in report['steps']], [2, 2, 3, 3])
         self.assertEqual([step['read_tables'] for step in report['steps']],
                          [['orders'], ['a_filtered', 'products'], ['orders'], ['b_filtered', 'products']])
-        with sqlite3.connect(report['database']) as db:
+        with closing(sqlite3.connect(report['database'])) as db:
             tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
             self.assertEqual(tables, {'orders', 'products', 'a_filtered', 'a_enriched', 'b_filtered', 'b_enriched'})
             self.assertEqual(db.execute('SELECT SUM(amount_cents) FROM a_enriched').fetchone()[0], 30000)
@@ -55,7 +56,7 @@ class SqlRunnerTests(unittest.TestCase):
         self.assertTrue(report['error']['file'].endswith('sql/b_enrich.sql'))
         self.assertIn('missing_field', report['error']['message'])
         self.assertEqual([step['status'] for step in report['steps']], ['SUCCESS'] * 3 + ['FAILED'])
-        with sqlite3.connect(report['database']) as db:
+        with closing(sqlite3.connect(report['database'])) as db:
             self.assertEqual(db.execute('SELECT COUNT(*) FROM b_filtered').fetchone()[0], 3)
             self.assertEqual(db.execute('SELECT COUNT(*) FROM a_enriched').fetchone()[0], 2)
             self.assertEqual(db.execute("SELECT name FROM sqlite_master WHERE name='b_enriched'").fetchall(), [])
@@ -81,7 +82,7 @@ class SqlRunnerTests(unittest.TestCase):
                 (self.fixture / 'sql/a_filter.sql').write_text(sql)
                 report = run_job(self.job, self.base / f'failure-{len(list(self.base.glob("failure-*")))}')
                 self.assertEqual(report['status'], 'FAILED')
-                with sqlite3.connect(report['database']) as db:
+                with closing(sqlite3.connect(report['database'])) as db:
                     self.assertEqual(db.execute('SELECT COUNT(*) FROM orders').fetchone()[0], 3)
                     self.assertEqual(db.execute('SELECT COUNT(*) FROM products').fetchone()[0], 3)
 
@@ -91,7 +92,7 @@ class SqlRunnerTests(unittest.TestCase):
         self.assertEqual(report['status'], 'FAILED')
         self.assertEqual(report['error']['step'], 'filter')
         self.assertIn('missing comparison columns', report['error']['message'])
-        with sqlite3.connect(report['database']) as db:
+        with closing(sqlite3.connect(report['database'])) as db:
             self.assertEqual(db.execute("SELECT name FROM sqlite_master WHERE name='a_filtered'").fetchall(), [])
 
     def test_contract_failure_stops_before_loading_invalid_source(self):
@@ -103,7 +104,7 @@ class SqlRunnerTests(unittest.TestCase):
         self.assertIn('invalid_amount', report['error']['message'])
         self.assertEqual(report['steps'], [])
         self.assertEqual(report['sources'][0]['validation']['decision'], 'BLOCK')
-        with sqlite3.connect(report['database']) as db:
+        with closing(sqlite3.connect(report['database'])) as db:
             self.assertEqual(db.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall(), [])
 
     def test_malformed_uncontracted_csv_is_rejected(self):
@@ -111,7 +112,7 @@ class SqlRunnerTests(unittest.TestCase):
         report = run_job(self.job, self.output)
         self.assertEqual(report['status'], 'FAILED')
         self.assertEqual(report['error']['table'], 'products')
-        with sqlite3.connect(report['database']) as db:
+        with closing(sqlite3.connect(report['database'])) as db:
             self.assertEqual(db.execute('SELECT COUNT(*) FROM orders').fetchone()[0], 3)
             self.assertEqual(db.execute("SELECT name FROM sqlite_master WHERE name='products'").fetchall(), [])
 

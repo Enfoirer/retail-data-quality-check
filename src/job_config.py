@@ -55,7 +55,7 @@ def load_job(path):
     except (OSError, UnicodeError, json.JSONDecodeError) as error:
         raise JobError(f'Cannot read job {path}: {error}') from error
     object_fields(job, 'job', ('schema_version', 'name', 'business_requirement', 'sources',
-                              'pipelines', 'checkpoints', 'comparison'))
+                              'pipelines', 'checkpoints', 'comparison'), ('query',))
     if type(job['schema_version']) is not int or job['schema_version'] != 1:
         raise JobError('Only job schema_version 1 is supported.')
     identifier(job['name'], 'name')
@@ -125,6 +125,29 @@ def load_job(path):
     identifier(comparison['amount_column'], 'comparison.amount_column')
     names(comparison['dimensions'], 'comparison.dimensions', allow_empty=True)
     names(comparison['value_columns'], 'comparison.value_columns', allow_empty=True)
+    if 'query' in job:
+        query = job['query']
+        object_fields(query, 'query', ('filters', 'group_by'))
+        names(query['group_by'], 'query.group_by', allow_empty=True)
+        if not set(query['group_by']) <= set(comparison['dimensions']):
+            raise JobError('query.group_by must use configured comparison dimensions.')
+        if not isinstance(query['filters'], list):
+            raise JobError('query.filters must be a list.')
+        available_fields = set(comparison['key'] + comparison['value_columns'] + comparison['dimensions'])
+        available_fields.add(comparison['amount_column'])
+        for condition in query['filters']:
+            object_fields(condition, 'query filter', ('column', 'operator', 'value'))
+            if not isinstance(condition['column'], str) or condition['column'] not in available_fields:
+                raise JobError('Query filters must reference fields available at all comparison checkpoints.')
+            if condition['operator'] not in ('eq', 'in', 'gte', 'lte'):
+                raise JobError('Query filter operator must be eq, in, gte, or lte.')
+            values = condition['value'] if condition['operator'] == 'in' else [condition['value']]
+            if not isinstance(values, list) or not values or any(type(value) not in (str, int) for value in values):
+                raise JobError('Query values must be strings or integers; in requires a nonempty list.')
+            if any(type(value) is int and not -(2 ** 63) <= value < 2 ** 63 for value in values):
+                raise JobError('Query integer values must fit SQLite signed 64-bit capacity.')
+            if condition['column'] == comparison['amount_column'] and any(type(value) is not int for value in values):
+                raise JobError('Money filters must use integer minor units.')
     if not isinstance(job['checkpoints'], list) or not job['checkpoints']:
         raise JobError('checkpoints must be a nonempty list.')
     checkpoint_names = set()
@@ -144,4 +167,7 @@ def load_job(path):
             if position <= previous[pipeline]:
                 raise JobError('Checkpoints must follow pipeline execution order without repeating outputs.')
             previous[pipeline] = position
+    if any(job['checkpoints'][-1][side].lower() != job['pipelines'][pipeline][-1]['output'].lower()
+           for pipeline, side in [('A', 'a'), ('B', 'b')]):
+        raise JobError('The last checkpoint must reference both final pipeline outputs.')
     return job
