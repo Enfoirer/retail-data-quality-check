@@ -4,7 +4,9 @@ MiraFlores AI Engineer case study | Jiacheng | Synthetic data, runnable local pr
 
 ## 1. Three problems and a focused choice
 
-I worked as a Data Engineer at JD for several months. Recurring issues I encountered included duplicate or missing identifiers, inconsistent formats, and disagreements in reporting conventions. These observations motivate the problems below. The prototype uses invented retail examples; it does not reconstruct an employer's architecture, incidents, code, or data.
+I worked as an SDE Intern at JD for several months, with exposure to tasks related to data engineering. JD's retail and e-commerce business involves connected datasets for orders, products, and reporting. Differences in how these datasets are filtered, joined, or aggregated can lead to inconsistent results.
+
+Recurring issues I encountered included duplicate or missing identifiers, inconsistent formats, and disagreements in reporting conventions. These observations motivate the problems below. The prototype reflects this retail setting through synthetic order-line snapshots, product tables, and order-amount reporting. It does not reconstruct an employer's architecture, incidents, code, or data.
 
 **Problem 1: investigating different results from related datasets (selected).** In retail data work, engineers and analysts can find that related outputs disagree even though processing jobs completed. Duplicate records, missing join keys, and different processing rules make investigation harder. Unresolved differences can distort aggregates or delay trusted reporting. The recurring data issues are observed; their frequency, business cost, and investigation time have not been measured here.
 
