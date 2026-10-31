@@ -1,0 +1,12 @@
+{
+  "name": "synthetic-order-original-amount-snapshots-v1",
+  "required": ["order_item_id", "order_id", "product_id", "order_date", "status", "province", "amount", "currency"],
+  "unique_key": ["order_item_id"],
+  "amount": {"field": "amount", "decimal_places": 2},
+  "date": {"field": "order_date", "format": "%Y-%m-%d"},
+  "allowed_values": {"currency": ["CNY"], "status": ["paid", "cancelled"]},
+  "status_amount": {
+    "status_field": "status",
+    "rules": {"paid": "positive", "cancelled": "nonnegative"}
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "name": "paid_orders_filter_mismatch",
+  "business_requirement": "Both final datasets must include only paid order-line snapshots. Product enrichment must preserve one row per order_item_id. Amount is original order amount in CNY; cancelled source snapshots can retain positive amounts.",
+  "sources": [
+    {
+      "table": "orders",
+      "csv": "orders.csv",
+      "contract": "orders.contract.json",
+      "money": {"field": "amount", "integer_column": "amount_cents"}
+    },
+    {"table": "products", "csv": "products.csv"}
+  ],
+  "pipelines": {
+    "A": [
+      {"id": "filter", "output": "a_filtered", "sql": "sql/a_filter.sql"},
+      {
+        "id": "enrich", "output": "a_enriched", "sql": "sql/a_enrich.sql",
+        "join": {
+          "left": "a_filtered", "right": "products",
+          "left_on": ["product_id"], "right_on": ["product_id"],
+          "expected": "many_to_one"
+        }
+      }
+    ],
+    "B": [
+      {"id": "filter", "output": "b_filtered", "sql": "sql/b_filter.sql"},
+      {
+        "id": "enrich", "output": "b_enriched", "sql": "sql/b_enrich.sql",
+        "join": {
+          "left": "b_filtered", "right": "products",
+          "left_on": ["product_id"], "right_on": ["product_id"],
+          "expected": "many_to_one"
+        }
+      }
+    ]
+  },
+  "checkpoints": [
+    {"name": "filtered", "a": "a_filtered", "b": "b_filtered"},
+    {"name": "enriched", "a": "a_enriched", "b": "b_enriched"}
+  ],
+  "comparison": {
+    "key": ["order_item_id"],
+    "amount_column": "amount_cents",
+    "dimensions": ["province"],
+    "value_columns": ["order_id", "product_id", "order_date", "status", "province", "amount_cents", "currency"]
+  }
+}

@@ -1,0 +1,3 @@
+SELECT o.*, p.category
+FROM b_filtered AS o
+LEFT JOIN products AS p ON o.product_id = p.product_id;

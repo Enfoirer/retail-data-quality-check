@@ -2,6 +2,10 @@
 
 A working, local CSV preflight tool driven by source-specific JSON data contracts. It locates problems before downstream ingestion and emits a machine-readable report. All samples are synthetic. No JD data, code, credentials, or integrations are used.
 
+## SQL reconciliation work in progress
+
+The next workflow compares two explicit SQL pipelines over shared source snapshots. See `docs/IMPLEMENTATION_PLAN.md` for six implementation milestones. Step 1 is complete: synthetic data, SQL steps, a proposed job format, and a manually specified answer key are in `samples/reconciliation/filter_mismatch/`. The generic executor, reconciliation engine, and runtime AI are not implemented yet. Commands below continue to run the existing single-file checker.
+
 ## Setup and run
 
 Python 3.10+; standard library only. Developed and tested on Python 3.13.7. No install, API key, paid service, or production account required. Run from the repository root:

@@ -1,0 +1,35 @@
+{
+  "note": "Hand-specified synthetic answer key. The reconciliation engine must compute its results independently and must not load this file.",
+  "difference_direction": "B_minus_A",
+  "sources": {
+    "orders": {"rows": 3, "amount_sum_cents": 177900},
+    "products": {"rows": 3}
+  },
+  "checkpoints": [
+    {
+      "name": "filtered",
+      "A": {"rows": 2, "unique_keys": 2, "amount_sum_cents": 30000},
+      "B": {"rows": 3, "unique_keys": 3, "amount_sum_cents": 177900},
+      "difference_cents": 147900,
+      "only_in_a_keys": [],
+      "only_in_b_keys": [["I003"]],
+      "value_mismatch_keys": []
+    },
+    {
+      "name": "enriched",
+      "A": {"rows": 2, "unique_keys": 2, "amount_sum_cents": 30000},
+      "B": {"rows": 3, "unique_keys": 3, "amount_sum_cents": 177900},
+      "difference_cents": 147900,
+      "only_in_a_keys": [],
+      "only_in_b_keys": [["I003"]],
+      "value_mismatch_keys": []
+    }
+  ],
+  "first_divergent_checkpoint": "filtered",
+  "final_province_differences_cents": {"北京": 147900, "上海": 0},
+  "after_fix": {
+    "A_rows": 2, "B_rows": 2,
+    "A_amount_sum_cents": 30000, "B_amount_sum_cents": 30000,
+    "difference_cents": 0, "record_differences": 0
+  }
+}
